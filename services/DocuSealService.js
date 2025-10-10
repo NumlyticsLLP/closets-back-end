@@ -52,19 +52,18 @@ class DocuSealService {
   }
 
   static async UpdateTemplate(template) {
-    const templateId = template.id;
-    const response = await axios.put(
-      `${DOCUSEAL_API}/templates/${templateId}/documents`,
-      template,
-      {
-        headers: {
-          "X-Auth-Token": DOCUSEAL_KEY,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response;
-  }
+  const response = await axios.post(
+    `${DOCUSEAL_API}/templates/pdf`,
+    template,
+    {
+      headers: {
+        "X-Auth-Token": DOCUSEAL_KEY,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return response;
+}
   
 };
 
