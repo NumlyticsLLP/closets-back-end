@@ -2,6 +2,7 @@ const express = require('express');
 const hbs = require('express-handlebars');
 const loginRoutes = require('./routes/login');
 const pdfRoutes = require('./routes/pdf');
+const azureBlb = require('./routes/azureblb');
 const path = require('path');
 const cors = require("cors");
 require('dotenv').config();
@@ -45,6 +46,7 @@ app.use(express.urlencoded({ limit: "26mb", extended: true }));
 
 app.use('/api/user', loginRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/azureblb', azureBlb);
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerjsonFilePath));
 
 app.get('/', (req, res) => {
