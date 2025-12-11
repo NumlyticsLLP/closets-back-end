@@ -2,6 +2,7 @@ const express = require('express');
 const hbs = require('express-handlebars');
 const loginRoutes = require('./routes/login');
 const pdfRoutes = require('./routes/pdf');
+const azureBlb = require('./routes/azureblb');
 const path = require('path');
 const cors = require("cors");
 require('dotenv').config();
@@ -39,12 +40,13 @@ app.set('views', path.join(__dirname, 'views'));
 //app.use(express.urlencoded({ extended: true }));
 
 
-app.use(express.json({ limit: "26mb" })); // default is only ~1mb
-app.use(express.urlencoded({ limit: "26mb", extended: true }));
+app.use(express.json({ limit: "150mb" })); // default is only ~1mb
+app.use(express.urlencoded({ limit: "150mb", extended: true }));
  
 
 app.use('/api/user', loginRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/azureblb', azureBlb);
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerjsonFilePath));
 
 app.get('/', (req, res) => {
