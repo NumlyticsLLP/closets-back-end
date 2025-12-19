@@ -1,3 +1,4 @@
+--To be Updated (Last Changed 19-12-2025)
 BEGIN
     DECLARE v_qty INT;
     DECLARE v_count INT DEFAULT 0;
@@ -45,6 +46,9 @@ BEGIN
             'cuttingarea', '',
             'collection', '',
             'collectionclr', '',
+									
+									 
+            'tearout', '',									
             'additionalNotes', '',
             'condo', JSON_OBJECT(
                 'hasCondos', NULL,
@@ -58,6 +62,7 @@ BEGIN
                 'sameascollectioncolor', FALSE,
                 'doorclosetcollection', '',
                 'doorcolor', '',
+									 
                 'quantity', '',
                 'decostyle', '',
                 'series', '',
@@ -67,10 +72,20 @@ BEGIN
                 'gripSize', '',
                 'gripColor', ''
             ),
+			'specialdoors', JSON_OBJECT(
+                'specialDoorQuantity', '',
+                'specialDoorType', '',
+                'specialDoorSize', '',
+                'specialDoorHeight', '',
+                'specialDoorInsert', '',
+                'specialDoorFrame', '',
+                'specialDoorEdge', ''
+            ),
             'drawers', JSON_OBJECT(
                 'sameascollcolor', FALSE,
                 'drawerclosetcollection', '',
                 'drawercolor', '',
+									   
                 'quantity', '',
                 'decostyle', '',
                 'series', '',
@@ -81,17 +96,25 @@ BEGIN
                 'gripColor', ''
             ),
             'rods', JSON_OBJECT(
+									
                 'quantity', '',
                 'style', '',
                 'color', ''
             ),
+			'racks', JSON_ARRAY(),
+            'baskets', JSON_ARRAY(),
+            'hooks', JSON_ARRAY(),
+            'hampers', JSON_ARRAY(),
             'counterTop', JSON_OBJECT(
+										   
                 'type', '',
                 'color', '',
                 'edge', ''
             ),
             'moulding', JSON_OBJECT(
+								   
                 'top', '',
+									  
                 'bottom', ''
             )
         );
