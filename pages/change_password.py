@@ -28,14 +28,8 @@ def change_password_page():
         # Extract email
         email = selected_user.split('(')[1].strip(')')
         
-        # Password options
-        password_method = st.radio("Password Type:", ["Generate Random", "Enter Custom"], horizontal=True)
-        
-        if password_method == "Enter Custom":
-            new_password = st.text_input("🔑 New Password", type="password")
-        else:
-            st.info("🎲 A random password will be generated based on the user's name")
-            new_password = None
+        # Info about password generation
+        st.info("🎲 A random password will be generated based on the user's name")
         
         submit = st.form_submit_button("🔄 Change Password", use_container_width=True)
         
@@ -55,12 +49,8 @@ def change_password_page():
                 
                 name = result[0]
                 
-                # Generate or use custom password
-                if password_method == "Generate Random":
-                    new_password = gen_password(name)
-                elif not new_password:
-                    st.error("❌ Please enter a password!")
-                    return
+                # Generate random password
+                new_password = gen_password(name)
                 
                 # Hash password
                 hashed_password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
