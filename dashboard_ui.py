@@ -4,8 +4,8 @@ Dashboard Screen - Main Navigation Hub
 import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                               QPushButton, QFrame, QGridLayout)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPalette, QColor
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap
 from database_desktop import get_user_count, get_today_users_count
 
 
@@ -19,12 +19,12 @@ class StatCard(QFrame):
         self.setStyleSheet("""
             StatCard {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #fcb900, stop:1 #ffd700);
+                    stop:0 #BCAA8D, stop:1 #D0BFA1);
                 border: none;
                 border-radius: 18px;
             }
         """)
-        self.setMinimumSize(210, 140)
+        self.setMinimumSize(180, 120)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 20, 15, 20)
@@ -58,7 +58,7 @@ class NavButton(QPushButton):
         self.setStyleSheet("""
             NavButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #fcb900, stop:1 #ffd700);
+                    stop:0 #BCAA8D, stop:1 #D0BFA1);
                 color: #000000;
                 padding: 18px;
                 border: none;
@@ -68,11 +68,11 @@ class NavButton(QPushButton):
             }
             NavButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #ffd700, stop:1 #ffe44d);
+                    stop:0 #D0BFA1, stop:1 #E4D5C1);
             }
             NavButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #e0a800, stop:1 #fcb900);
+                    stop:0 #A89673, stop:1 #BCAA8D);
             }
         """)
 
@@ -85,13 +85,13 @@ class Dashboard(QWidget):
         
     def init_ui(self):
         """Initialize the UI components."""
-        self.setWindowTitle("🔐 User Management System - Dashboard")
+        self.setWindowTitle("🔐 Identity Manager")
         self.setMinimumSize(700, 550)
         
         # Set background color directly
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#f5f6fa"))
+        palette.setColor(QPalette.ColorRole.Window, QColor("#ffffff"))
         self.setPalette(palette)
         
         # Main layout
@@ -99,8 +99,24 @@ class Dashboard(QWidget):
         main_layout.setSpacing(12)
         main_layout.setContentsMargins(30, 25, 30, 25)
         
+        # Top section with Logo and Header
+        top_layout = QHBoxLayout()
+        
+        # Logo in upper left
+        logo_label = QLabel()
+        logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo 1.png")
+        if os.path.exists(logo_path):
+            logo = QPixmap(logo_path)
+            scaled_logo = logo.scaledToHeight(80, Qt.TransformationMode.SmoothTransformation)
+            logo_label.setPixmap(scaled_logo)
+        top_layout.addWidget(logo_label)
+        top_layout.addStretch()
+        
+        main_layout.addLayout(top_layout)
+        main_layout.addSpacing(10)
+        
         # Header
-        header = QLabel("🔐 User Management System")
+        header = QLabel("🔐 Identity Manager")
         header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header_font = QFont("Segoe UI", 24, QFont.Weight.Bold)
         header.setFont(header_font)
@@ -117,32 +133,46 @@ class Dashboard(QWidget):
         
         main_layout.addSpacing(15)
         
+        # Setup auto-refresh timer (every 1 second)
+        self.refresh_timer = QTimer()
+        self.refresh_timer.timeout.connect(self.refresh_stats)
+        self.refresh_timer.start(1000)  # 1000 milliseconds = 1 second
+        
         # Stats section with padding
         stats_container = QHBoxLayout()
-        stats_container.addSpacing(150)
+        stats_container.addSpacing(200)
         
         stats_layout = QHBoxLayout()
-        stats_layout.setSpacing(40)
+        stats_layout.setSpacing(30)
         
-        total_users = get_user_count()
+        try:
+            total_users = get_user_count()
+        except Exception as e:
+            total_users = "N/A"
+            
         self.stat1 = StatCard("👥 Total Users", total_users)
         stats_layout.addWidget(self.stat1)
         
-        today_users = get_today_users_count()
+        try:
+            today_users = get_today_users_count()
+        except Exception as e:
+            today_users = "N/A"
+            
         self.stat2 = StatCard("✨ Added Today", today_users)
         stats_layout.addWidget(self.stat2)
         
         stats_container.addLayout(stats_layout)
-        stats_container.addSpacing(150)
+        stats_container.addSpacing(200)
         
         main_layout.addLayout(stats_container)
         
-        main_layout.addSpacing(15)
+        main_layout.addSpacing(35)
         
         # Navigation label
         nav_label = QLabel("📋 Navigation")
         nav_font = QFont("Segoe UI", 14, QFont.Weight.Bold)
         nav_label.setFont(nav_font)
+        nav_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         nav_label.setStyleSheet("color: #000000; background: transparent;")
         main_layout.addWidget(nav_label)
         
@@ -156,18 +186,22 @@ class Dashboard(QWidget):
         nav_layout.setSpacing(18)
         
         self.add_btn = NavButton("➕ Add Users", "Create new user accounts")
+        self.add_btn.setMaximumWidth(300)
         self.add_btn.clicked.connect(self.open_add_users)
         nav_layout.addWidget(self.add_btn)
         
         self.show_btn = NavButton("👥 Show Users", "View all user accounts")
+        self.show_btn.setMaximumWidth(300)
         self.show_btn.clicked.connect(self.open_show_users)
         nav_layout.addWidget(self.show_btn)
         
         self.change_btn = NavButton("🔑 Change Password", "Update user passwords")
+        self.change_btn.setMaximumWidth(300)
         self.change_btn.clicked.connect(self.open_change_password)
         nav_layout.addWidget(self.change_btn)
         
         self.remove_btn = NavButton("🗑️ Remove User", "Delete user accounts")
+        self.remove_btn.setMaximumWidth(300)
         self.remove_btn.clicked.connect(self.open_remove_user)
         nav_layout.addWidget(self.remove_btn)
         
@@ -178,11 +212,12 @@ class Dashboard(QWidget):
         
         main_layout.addStretch(1)
         
-        # Logout button with padding
+        # Exit button with padding
         logout_container = QHBoxLayout()
         logout_container.addSpacing(250)
         
-        logout_btn = QPushButton("🚪 LOGOUT")
+        logout_btn = QPushButton("🚪 EXIT APPLICATION")
+        logout_btn.setMaximumWidth(200)
         logout_btn.clicked.connect(self.logout)
         logout_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         logout_btn.setMinimumHeight(60)
@@ -236,8 +271,24 @@ class Dashboard(QWidget):
         self.remove_window = RemoveUserScreen()
         self.remove_window.show()
     
+    def refresh_stats(self):
+        """Refresh the statistics cards with fresh data."""
+        try:
+            total_users = get_user_count()
+        except Exception as e:
+            total_users = "N/A"
+        
+        try:
+            today_users = get_today_users_count()
+        except Exception as e:
+            today_users = "N/A"
+        
+        # Update stat cards with new values
+        self.stat1.value_label.setText(str(total_users))
+        self.stat2.value_label.setText(str(today_users))
+    
     def logout(self):
-        from login_ui import LoginScreen
-        self.login_window = LoginScreen()
-        self.login_window.show()
+        """Exit the application instead of returning to login."""
+        import sys
         self.close()
+        sys.exit(0)

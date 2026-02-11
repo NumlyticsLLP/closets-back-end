@@ -401,17 +401,106 @@ PASSWORD_PROTECTOR_2.0/
 
 ## 🔧 Troubleshooting
 
-### Common Issues and Solutions
+### Common Error Analysis
+
+#### Error: `mysql.connector.errors.ProgrammingError: 1045 (28000): Access denied for user 'root'@'localhost'`
+
+**This error means MySQL is rejecting your root user credentials. Here's how to fix it:**
+
+**Immediate Solutions:**
+1. **Find Your Actual MySQL Root Password**
+   - Check if you set a password during MySQL installation
+   - Common default passwords: empty string "", "root", "admin", "password"
+   - Check any MySQL installation notes you might have saved
+
+2. **Test Different Passwords**
+   - Edit `sample_credentials.json` or `sample_credentials.txt` with different passwords
+   - Run the application and try each password
+   - When application starts successfully, the password is correct
+
+3. **Use MySQL Workbench (Easiest Method)**
+   - Open MySQL Workbench
+   - Try connecting with different root passwords
+   - Once connected, note the working password
+   - Update your credential files with the correct password
+
+4. **Reset Root Password (If All Else Fails)**
+   ```bash
+   # Stop MySQL service
+   net stop MySQL80
+   
+   # Start MySQL without authentication
+   mysqld --skip-grant-tables --skip-networking
+   
+   # In new command prompt, connect to MySQL
+   mysql -u root
+   
+   # Reset the password
+   ALTER USER 'root'@'localhost' IDENTIFIED BY 'newpassword123';
+   FLUSH PRIVILEGES;
+   
+   # Restart MySQL normally
+   net start MySQL80
+   ```
+
+**Root Cause:** MySQL authentication issue - either wrong password, expired password, or authentication method mismatch.
 
 #### Database Connection Problems
 ```
-Issue: "Failed to connect to MySQL server"
+Issue: "Failed to connect to MySQL server" or "Access denied for user 'root'@'localhost'"
 Solutions:
-1. Verify MySQL server is running
-2. Check database credentials in config.py
-3. Ensure MySQL port (3306) is not blocked by firewall
-4. Verify database 'user_management' exists
-5. Test connection with MySQL command line client
+1. Verify MySQL server is running: Get-Service -Name "*mysql*"
+2. Check database credentials in config.py or credential files
+3. Reset MySQL root password if needed (see below)
+4. Ensure MySQL port (3306) is not blocked by firewall
+5. Verify database 'user_management' exists
+6. Test connection with MySQL Workbench or command line client
+7. Check MySQL authentication method compatibility
+```
+
+#### MySQL Root Password Reset (Windows)
+```bash
+# Method 1: Using MySQL Workbench (Recommended)
+1. Open MySQL Workbench
+2. Create new connection with root user
+3. Test connection and reset password if needed
+4. Update config.py with correct password
+
+# Method 2: Command Line Reset
+1. Stop MySQL service: net stop MySQL80
+2. Start MySQL in safe mode: mysqld --skip-grant-tables --skip-networking
+3. Connect without password: mysql -u root
+4. Reset password: ALTER USER 'root'@'localhost' IDENTIFIED BY 'your_new_password';
+5. Restart MySQL service: net start MySQL80
+
+# Method 3: Using MySQL Configuration
+1. Check MySQL installation directory (usually C:\Program Files\MySQL\MySQL Server 8.0\)
+2. Look for my.ini configuration file
+3. Verify authentication settings and user configuration
+```
+
+#### Dynamic Database Credentials Setup
+```bash
+# The application now supports loading credentials from files
+# Create a credentials file with your actual MySQL details:
+
+# Option 1: JSON format (credentials.json)
+{
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "your_actual_mysql_password",
+    "database": "user_management"
+}
+
+# Option 2: Key-value format (credentials.txt)
+host=localhost
+port=3306
+user=root
+password=your_actual_mysql_password
+database=user_management
+
+# Run the application and select your credentials file when prompted
 ```
 
 #### Login Issues

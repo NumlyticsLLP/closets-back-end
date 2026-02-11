@@ -1,10 +1,11 @@
 """
 Show Users Screen - View all user accounts
 """
+import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QPushButton, 
                               QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QHBoxLayout, QMessageBox, QFileDialog)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPalette, QColor
+from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap
 from database_desktop import get_all_users
 import pandas as pd
 import os
@@ -46,13 +47,25 @@ class ShowUsersScreen(QWidget):
         # Set background
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#f5f6fa"))
+        palette.setColor(QPalette.ColorRole.Window, QColor("#ffffff"))
         self.setPalette(palette)
         
         # Main layout
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(30, 25, 30, 25)
+        
+        # Top section with Logo
+        top_layout = QHBoxLayout()
+        logo_label = QLabel()
+        logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo 1.png")
+        if os.path.exists(logo_path):
+            logo = QPixmap(logo_path)
+            scaled_logo = logo.scaledToHeight(60, Qt.TransformationMode.SmoothTransformation)
+            logo_label.setPixmap(scaled_logo)
+        top_layout.addWidget(logo_label)
+        top_layout.addStretch()
+        layout.addLayout(top_layout)
         
         # Title
         title = QLabel("👥 All Users")
@@ -78,17 +91,17 @@ class ShowUsersScreen(QWidget):
         self.search_input.setStyleSheet("""
             QLineEdit {
                 padding: 12px 18px;
-                border: 2px solid #e0e0e0;
+                border: 2px solid #C5B39F;
                 border-radius: 12px;
                 background-color: #ffffff;
                 color: #000000;
             }
             QLineEdit:hover {
-                border: 2px solid #fcb900;
-                background-color: #fffef8;
+                border: 2px solid #BCAA8D;
+                background-color: #fdfaf7;
             }
             QLineEdit:focus {
-                border: 2px solid #fcb900;
+                border: 2px solid #BCAA8D;
                 background-color: #ffffff;
             }
         """)
@@ -112,13 +125,13 @@ class ShowUsersScreen(QWidget):
                 color: #000000;
             }
             QTableWidget::item:selected {
-                background-color: #fff9e6;
+                background-color: #fdfaf7;
                 color: #000000;
             }
             QHeaderView::section {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #fcb900, stop:1 #ffd700);
-                color: #000000;
+                    stop:0 #BCAA8D, stop:1 #D0BFA1);
+                color: #ffffff;
                 padding: 14px;
                 font-weight: bold;
                 border: none;
@@ -134,6 +147,7 @@ class ShowUsersScreen(QWidget):
         
         # Change Path button
         change_path_btn = QPushButton("📂 CHANGE PATH")
+        change_path_btn.setMaximumWidth(200)
         change_path_btn.clicked.connect(self.change_download_path)
         change_path_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         change_path_btn.setMinimumHeight(52)
@@ -156,7 +170,8 @@ class ShowUsersScreen(QWidget):
         button_layout.addWidget(change_path_btn)
         
         # Download CSV button
-        download_btn = QPushButton("📥 DOWNLOAD CSV")
+        download_btn = QPushButton("📥 DOWNLOAD CSV")        
+        download_btn.setMaximumWidth(220)        
         download_btn.clicked.connect(self.download_csv)
         download_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         download_btn.setMinimumHeight(52)
@@ -164,25 +179,26 @@ class ShowUsersScreen(QWidget):
         download_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #fcb900, stop:1 #ffd700);
-                color: #000000;
+                    stop:0 #BCAA8D, stop:1 #D0BFA1);
+                color: #ffffff;
                 border: none;
                 border-radius: 12px;
                 padding: 14px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #ffd700, stop:1 #ffe44d);
+                    stop:0 #D0BFA1, stop:1 #E4D5C1);
             }
             QPushButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #e0a800, stop:1 #fcb900);
+                    stop:0 #A89673, stop:1 #BCAA8D);
             }
         """)
         button_layout.addWidget(download_btn)
         
         # Close button
-        close_btn = QPushButton("❌ CLOSE")
+        close_btn = QPushButton("❌ CLOSE")        
+        close_btn.setMaximumWidth(200)        
         close_btn.clicked.connect(self.close)
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         close_btn.setMinimumHeight(52)

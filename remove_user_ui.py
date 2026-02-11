@@ -1,16 +1,18 @@
 """
 Remove User Screen - Delete user accounts
 """
+import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                              QComboBox, QPushButton, QMessageBox)
+                              QComboBox, QPushButton, QMessageBox, QLineEdit)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPalette, QColor
+from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap
 from database_desktop import get_all_users, remove_user
 
 
 class RemoveUserScreen(QWidget):
     def __init__(self):
         super().__init__()
+        self.all_users = []  # Store all users for filtering
         self.init_ui()
         
     def init_ui(self):
@@ -20,13 +22,25 @@ class RemoveUserScreen(QWidget):
         # Set background
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#f5f6fa"))
+        palette.setColor(QPalette.ColorRole.Window, QColor("#ffffff"))
         self.setPalette(palette)
         
         # Main layout
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         layout.setContentsMargins(40, 30, 40, 30)
+        
+        # Top section with Logo
+        top_layout = QHBoxLayout()
+        logo_label = QLabel()
+        logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo 1.png")
+        if os.path.exists(logo_path):
+            logo = QPixmap(logo_path)
+            scaled_logo = logo.scaledToHeight(60, Qt.TransformationMode.SmoothTransformation)
+            logo_label.setPixmap(scaled_logo)
+        top_layout.addWidget(logo_label)
+        top_layout.addStretch()
+        layout.addLayout(top_layout)
         
         # Title
         title = QLabel("🗑️ Remove User")
@@ -46,6 +60,34 @@ class RemoveUserScreen(QWidget):
         
         layout.addSpacing(20)
         
+        # Search field
+        search_label = QLabel("🔍 Search User")
+        search_label.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
+        search_label.setStyleSheet("color: #2c3e50; background: transparent;")
+        layout.addWidget(search_label)
+        
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Type name or email to search...")
+        self.search_input.setMinimumHeight(40)
+        self.search_input.setFont(QFont("Segoe UI", 10))
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                padding: 10px 15px;
+                border: 2px solid #C5B39F;
+                border-radius: 8px;
+                background-color: #ffffff;
+                color: #000000;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+                background-color: #ffffff;
+            }
+        """)
+        self.search_input.textChanged.connect(self.filter_users)
+        layout.addWidget(self.search_input)
+        
+        layout.addSpacing(15)
+        
         # User selection
         user_label = QLabel("👤 Select User to Remove")
         user_label.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
@@ -58,17 +100,17 @@ class RemoveUserScreen(QWidget):
         self.user_combo.setStyleSheet("""
             QComboBox {
                 padding: 12px 18px;
-                border: 2px solid #e0e0e0;
+                border: 2px solid #C5B39F;
                 border-radius: 12px;
                 background-color: #ffffff;
                 color: #000000;
             }
             QComboBox:hover {
-                border: 2px solid #fcb900;
-                background-color: #fffef8;
+                border: 2px solid #BCAA8D;
+                background-color: #fdfaf7;
             }
             QComboBox:focus {
-                border: 2px solid #fcb900;
+                border: 2px solid #BCAA8D;
                 background-color: #ffffff;
             }
             QComboBox::drop-down {
@@ -78,17 +120,16 @@ class RemoveUserScreen(QWidget):
                 image: none;
                 border-left: 5px solid transparent;
                 border-right: 5px solid transparent;
-                border-top: 6px solid #000000;
+                border-top: 6px solid #BCAA8D;
                 margin-right: 10px;
             }
             QComboBox QAbstractItemView {
                 background-color: #ffffff;
                 color: #000000;
-                selection-background-color: #fcb900;
-                border: 2px solid #e0e0e0;
+                selection-background-color: #BCAA8D;
+                border: 2px solid #C5B39F;
             }
         """)
-        self.load_users()
         layout.addWidget(self.user_combo)
         
         layout.addStretch(1)
@@ -98,6 +139,7 @@ class RemoveUserScreen(QWidget):
         button_layout.setSpacing(12)
         
         self.remove_button = QPushButton("🗑️ REMOVE USER")
+        self.remove_button.setMaximumWidth(250)
         self.remove_button.clicked.connect(self.handle_remove_user)
         self.remove_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.remove_button.setMinimumHeight(54)
@@ -120,6 +162,7 @@ class RemoveUserScreen(QWidget):
         button_layout.addWidget(self.remove_button)
         
         self.close_button = QPushButton("❌ CLOSE")
+        self.close_button.setMaximumWidth(200)
         self.close_button.clicked.connect(self.close)
         self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.close_button.setMinimumHeight(54)
@@ -143,8 +186,19 @@ class RemoveUserScreen(QWidget):
         
         layout.addLayout(button_layout)
         
+        # Load users after buttons are created
+        self.load_users()
+        
     def load_users(self):
         df = get_all_users()
+        self.all_users = df  # Store for filtering
+        self.populate_from_df(df)
+    
+    def populate_from_df(self, df):
+        """Populate combo box from DataFrame."""
+        self.user_combo.clear()
+        self.remove_button.setEnabled(True)
+        
         if not df.empty:
             for _, row in df.iterrows():
                 display_text = f"{row['Name']} ({row['Email']})"
@@ -152,6 +206,33 @@ class RemoveUserScreen(QWidget):
         else:
             self.user_combo.addItem("No users found", None)
             self.remove_button.setEnabled(False)
+    
+    def filter_users(self, search_text):
+        """Filter users based on search text."""
+        search_text = search_text.lower().strip()
+        
+        if not search_text:
+            # If search is empty, show all users
+            self.populate_from_df(self.all_users)
+            return
+        
+        # Filter DataFrame based on search text
+        if self.all_users.empty:
+            self.user_combo.clear()
+            self.user_combo.addItem("No users found", None)
+            return
+        
+        # Search in both Name and Email columns
+        filtered_df = self.all_users[
+            self.all_users['Name'].str.lower().str.contains(search_text, na=False) |
+            self.all_users['Email'].str.lower().str.contains(search_text, na=False)
+        ]
+        
+        if not filtered_df.empty:
+            self.populate_from_df(filtered_df)
+        else:
+            self.user_combo.clear()
+            self.user_combo.addItem("❌ No users found", None)
     
     def handle_remove_user(self):
         email = self.user_combo.currentData()

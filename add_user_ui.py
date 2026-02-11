@@ -1,12 +1,15 @@
 """
 Add User Screen - Create new user accounts
 """
+import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                              QLineEdit, QPushButton, QMessageBox, QComboBox)
+                              QLineEdit, QPushButton, QMessageBox, QComboBox, QFileDialog)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPalette, QColor
+from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap
 from database_desktop import add_user
 from utils import gen_password
+from file_storage_dialog import FileStorageDialog
+from file_storage_utils import FileStorageManager
 import pandas as pd
 import os
 import json
@@ -47,13 +50,25 @@ class AddUserScreen(QWidget):
         # Set background
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#f5f6fa"))
+        palette.setColor(QPalette.ColorRole.Window, QColor("#ffffff"))
         self.setPalette(palette)
         
         # Main layout
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
         layout.setContentsMargins(40, 30, 40, 30)
+        
+        # Top section with Logo
+        top_layout = QHBoxLayout()
+        logo_label = QLabel()
+        logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo 1.png")
+        if os.path.exists(logo_path):
+            logo = QPixmap(logo_path)
+            scaled_logo = logo.scaledToHeight(60, Qt.TransformationMode.SmoothTransformation)
+            logo_label.setPixmap(scaled_logo)
+        top_layout.addWidget(logo_label)
+        top_layout.addStretch()
+        layout.addLayout(top_layout)
         
         # Title
         title = QLabel("➕ Add New User")
@@ -77,17 +92,17 @@ class AddUserScreen(QWidget):
         self.name_input.setStyleSheet("""
             QLineEdit {
                 padding: 12px 18px;
-                border: 2px solid #e0e0e0;
+                border: 2px solid #C5B39F;
                 border-radius: 12px;
                 background-color: #ffffff;
                 color: #000000;
             }
             QLineEdit:hover {
-                border: 2px solid #fcb900;
-                background-color: #fffef8;
+                border: 2px solid #BCAA8D;
+                background-color: #fdfaf7;
             }
             QLineEdit:focus {
-                border: 2px solid #fcb900;
+                border: 2px solid #BCAA8D;
                 background-color: #ffffff;
             }
         """)
@@ -108,17 +123,17 @@ class AddUserScreen(QWidget):
         self.email_input.setStyleSheet("""
             QLineEdit {
                 padding: 12px 18px;
-                border: 2px solid #e0e0e0;
+                border: 2px solid #C5B39F;
                 border-radius: 12px;
                 background-color: #ffffff;
                 color: #000000;
             }
             QLineEdit:hover {
-                border: 2px solid #fcb900;
-                background-color: #fffef8;
+                border: 2px solid #BCAA8D;
+                background-color: #fdfaf7;
             }
             QLineEdit:focus {
-                border: 2px solid #fcb900;
+                border: 2px solid #BCAA8D;
                 background-color: #ffffff;
             }
         """)
@@ -139,17 +154,17 @@ class AddUserScreen(QWidget):
         self.role_combo.setStyleSheet("""
             QComboBox {
                 padding: 12px 18px;
-                border: 2px solid #e0e0e0;
+                border: 2px solid #C5B39F;
                 border-radius: 12px;
                 background-color: #ffffff;
                 color: #000000;
             }
             QComboBox:hover {
-                border: 2px solid #fcb900;
-                background-color: #fffef8;
+                border: 2px solid #BCAA8D;
+                background-color: #fdfaf7;
             }
             QComboBox:focus {
-                border: 2px solid #fcb900;
+                border: 2px solid #BCAA8D;
                 background-color: #ffffff;
             }
             QComboBox::drop-down {
@@ -159,14 +174,14 @@ class AddUserScreen(QWidget):
                 image: none;
                 border-left: 5px solid transparent;
                 border-right: 5px solid transparent;
-                border-top: 6px solid #000000;
+                border-top: 6px solid #BCAA8D;
                 margin-right: 10px;
             }
             QComboBox QAbstractItemView {
                 background-color: #ffffff;
                 color: #000000;
-                selection-background-color: #fcb900;
-                border: 2px solid #e0e0e0;
+                selection-background-color: #BCAA8D;
+                border: 2px solid #C5B39F;
             }
         """)
         layout.addWidget(self.role_combo)
@@ -187,6 +202,7 @@ class AddUserScreen(QWidget):
         button_layout.setSpacing(12)
         
         self.add_button = QPushButton("➕ ADD USER")
+        self.add_button.setMaximumWidth(250)
         self.add_button.clicked.connect(self.handle_add_user)
         self.add_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.add_button.setMinimumHeight(54)
@@ -194,24 +210,25 @@ class AddUserScreen(QWidget):
         self.add_button.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #fcb900, stop:1 #ffd700);
-                color: #000000;
+                    stop:0 #BCAA8D, stop:1 #D0BFA1);
+                color: #ffffff;
                 border: none;
                 border-radius: 12px;
                 padding: 14px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #ffd700, stop:1 #ffe44d);
+                    stop:0 #D0BFA1, stop:1 #E4D5C1);
             }
             QPushButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #e0a800, stop:1 #fcb900);
+                    stop:0 #A89673, stop:1 #BCAA8D);
             }
         """)
         button_layout.addWidget(self.add_button)
         
         self.close_button = QPushButton("❌ CLOSE")
+        self.close_button.setMaximumWidth(200)
         self.close_button.clicked.connect(self.close)
         self.close_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.close_button.setMinimumHeight(54)
@@ -251,65 +268,55 @@ class AddUserScreen(QWidget):
         success, message = add_user(name, email, password, role)
         
         if success:
-            # Use saved path as default
-            default_path = self.load_saved_path()
-            
-            # Ask user to select download directory
-            download_dir = QFileDialog.getExistingDirectory(
-                self,
-                "📁 Select Folder to Save User Data",
-                default_path,
-                QFileDialog.Option.ShowDirsOnly
+            # Show file storage options dialog
+            storage_option, file_path = FileStorageDialog.get_storage_choice(
+                parent=self,
+                title="💾 Save User Data",
+                operation="save user credentials"
             )
             
-            if not download_dir:
+            if storage_option is None:
+                # User cancelled file selection
                 QMessageBox.information(self, "Info", 
                     f"✅ User added successfully!\n\n"
-                    f"Password: {password}\n\n"
-                    f"⚠️ No files saved (folder selection cancelled)")
+                    f"👤 Name: {name}\n"
+                    f"📧 Email: {email}\n"
+                    f"🔑 Password: {password}\n\n"
+                    f"⚠️ No files saved (operation cancelled)")
                 self.name_input.clear()
                 self.email_input.clear()
+                self.role_combo.setCurrentIndex(0)
                 return
             
-            # Save this path for future use
-            self.save_path(download_dir)
+            # Prepare user data
+            user_data = FileStorageManager.prepare_user_data(name, email, password, role)
             
-            # Append to single CSV file
-            csv_filename = "all_users_data.csv"
-            csv_filepath = os.path.join(download_dir, csv_filename)
+            # Save data using the storage manager
+            save_success, save_message, files_created = FileStorageManager.save_user_data(
+                user_data, storage_option, file_path, "user"
+            )
             
-            new_user_data = pd.DataFrame([{
-                "Name": name,
-                "Email": email,
-                "Password": password,
-                "Role": role,
-                "Created": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }])
-            
-            # Check if file exists, if yes append, otherwise create new
-            if os.path.exists(csv_filepath):
-                existing_df = pd.read_csv(csv_filepath)
-                updated_df = pd.concat([existing_df, new_user_data], ignore_index=True)
-                updated_df.to_csv(csv_filepath, index=False)
+            if save_success:
+                # Show success message with file details
+                QMessageBox.information(self, "Success", 
+                    f"✅ User added successfully!\n\n"
+                    f"👤 Name: {name}\n"
+                    f"📧 Email: {email}\n"
+                    f"🔑 Password: {password}\n\n"
+                    f"{save_message}")
             else:
-                new_user_data.to_csv(csv_filepath, index=False)
-            
-            # Also export individual credentials to Excel for immediate reference
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            excel_filename = f"user_credentials_{timestamp}.xlsx"
-            excel_filepath = os.path.join(download_dir, excel_filename)
-            new_user_data.to_excel(excel_filepath, index=False)
-            
-            QMessageBox.information(self, "Success", 
-                f"✅ User added successfully!\n\n"
-                f"📝 Credentials: {excel_filename}\n"
-                f"📄 All users: {csv_filename}\n\n"
-                f"📂 Saved to:\n{download_dir}\n\n"
-                f"Password: {password}")
+                # Database success but file save failed
+                QMessageBox.warning(self, "Partial Success", 
+                    f"✅ User added successfully to database!\n\n"
+                    f"👤 Name: {name}\n"
+                    f"📧 Email: {email}\n"
+                    f"🔑 Password: {password}\n\n"
+                    f"⚠️ File save failed: {save_message}")
             
             # Clear fields
             self.name_input.clear()
             self.email_input.clear()
             self.role_combo.setCurrentIndex(0)
         else:
+            QMessageBox.warning(self, "Error", f"❌ {message}")
             QMessageBox.warning(self, "Error", f"❌ {message}")

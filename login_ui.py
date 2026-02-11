@@ -1,12 +1,12 @@
 """
-Login Screen - Admin Authentication
+Login Screen - Admin Authentication with Mode Support
 """
 import logging
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, 
-                              QLineEdit, QPushButton, QMessageBox)
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                              QLineEdit, QPushButton, QMessageBox, QFrame)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPalette, QColor
-from database_desktop import verify_admin_credentials
+from database_desktop import verify_admin_credentials, get_current_mode, get_mode_info
 
 logger = logging.getLogger(__name__)
 
@@ -14,11 +14,18 @@ logger = logging.getLogger(__name__)
 class LoginScreen(QWidget):
     def __init__(self):
         super().__init__()
+        self.current_mode = None
+        self.db_config = None
         self.init_ui()
         
     def init_ui(self):
-        self.setWindowTitle("🔐 User Management System - Admin Login")
-        self.setMinimumSize(450, 400)
+        # Get mode information
+        mode_info = get_mode_info()
+        mode = mode_info.get('mode', 'unknown')
+        mode_icon = "🧪" if mode == "test" else "🏭" if mode == "production" else "🔧"
+        
+        self.setWindowTitle(f"🔐 Password Generator - Admin Login ({mode.title()} Mode)")
+        self.setMinimumSize(450, 500)
         
         # Set background
         self.setAutoFillBackground(True)
@@ -28,6 +35,13 @@ class LoginScreen(QWidget):
         
         # Main layout
         layout = QVBoxLayout(self)
+        layout.setSpacing(20)
+        layout.setContentsMargins(40, 30, 40, 30)
+        
+        # Mode indicator frame
+        self.add_mode_indicator(layout, mode_info)
+        
+        layout.addSpacing(10)
         layout.setSpacing(15)
         layout.setContentsMargins(50, 40, 50, 40)
         
@@ -56,7 +70,7 @@ class LoginScreen(QWidget):
         layout.addWidget(email_label)
         
         self.email_input = QLineEdit()
-        self.email_input.setPlaceholderText("admin@example.com")
+        self.email_input.setPlaceholderText("Enter admin email")
         self.email_input.setMinimumHeight(50)
         self.email_input.setFont(QFont("Segoe UI", 11))
         self.email_input.setStyleSheet("""
@@ -113,26 +127,40 @@ class LoginScreen(QWidget):
         
         layout.addSpacing(20)
         
-        # Login button
+        # Login button centered
+        login_container = QHBoxLayout()
+        login_container.addStretch(1)
+        
         self.login_button = QPushButton("🚀 LOGIN")
+        self.login_button.setMaximumWidth(300)
+        self.login_button.setMinimumWidth(200)
         self.login_button.clicked.connect(self.handle_login)
         self.login_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.login_button.setMinimumHeight(50)
-        self.login_button.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        self.login_button.setMinimumHeight(55)
+        self.login_button.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         self.login_button.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                     stop:0 #fcb900, stop:1 #ffd700);
                 color: #000000;
                 border: none;
-                border-radius: 10px;
+                border-radius: 12px;
+                padding: 12px 20px;
+                text-align: center;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                     stop:0 #e0a800, stop:1 #fcb900);
             }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #d4a700, stop:1 #e0a800);
+            }
         """)
-        layout.addWidget(self.login_button)
+        login_container.addWidget(self.login_button)
+        login_container.addStretch(1)
+        
+        layout.addLayout(login_container)
         
         layout.addSpacing(15)
         
@@ -194,3 +222,56 @@ class LoginScreen(QWidget):
             import traceback
             logger.error(traceback.format_exc())
             QMessageBox.critical(self, "Error", f"❌ An error occurred: {str(e)}")
+    
+    def add_mode_indicator(self, layout, mode_info):
+        """Add mode indicator showing current environment and database info."""
+        mode = mode_info.get('mode', 'unknown')
+        host = mode_info.get('host', 'unknown')
+        database = mode_info.get('database', 'unknown')
+        user = mode_info.get('user', 'unknown')
+        
+        # Determine colors and icons based on mode
+        if mode == 'test':
+            mode_icon = "🧪"
+            mode_color = "#27ae60"
+            bg_color = "#e8f5e8"
+        elif mode == 'production':
+            mode_icon = "🏭"
+            mode_color = "#e67e22"
+            bg_color = "#fff3e0"
+        else:
+            mode_icon = "🔧"
+            mode_color = "#95a5a6"
+            bg_color = "#f8f9fa"
+        
+        # Create mode indicator frame
+        mode_frame = QFrame()
+        mode_frame.setFrameStyle(QFrame.Shape.StyledPanel)
+        mode_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {bg_color};
+                border: 2px solid {mode_color};
+                border-radius: 8px;
+                padding: 8px;
+            }}
+        """)
+        
+        mode_layout = QVBoxLayout(mode_frame)
+        mode_layout.setSpacing(5)
+        mode_layout.setContentsMargins(10, 8, 10, 8)
+        
+        # Mode title
+        mode_title = QLabel(f"{mode_icon} {mode.upper()} MODE")
+        mode_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        mode_title.setStyleSheet(f"color: {mode_color}; background: transparent;")
+        mode_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        mode_layout.addWidget(mode_title)
+        
+        # Database info
+        db_info = QLabel(f"📊 {database}@{host} | 👤 {user}")
+        db_info.setFont(QFont("Segoe UI", 9))
+        db_info.setStyleSheet("color: #34495e; background: transparent;")
+        db_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        mode_layout.addWidget(db_info)
+        
+        layout.addWidget(mode_frame)

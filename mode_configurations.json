@@ -1,0 +1,12 @@
+{
+  "test": {
+    "connection_string": "localhost:3306/user_management",
+    "username": "root",
+    "password": "0000"
+  },
+  "production": {
+    "connection_string": "localhost:3306/user_management",
+    "username": "root",
+    "password": "0000"
+  }
+}

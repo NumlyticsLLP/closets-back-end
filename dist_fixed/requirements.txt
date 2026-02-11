@@ -1,0 +1,21 @@
+# PASSWORD_PROTECTOR_2.0 - Python Dependencies
+# Core GUI Framework
+PyQt6==6.6.0
+
+# Database Connectivity
+mysql-connector-python==8.2.0
+
+# Data Processing and Export
+pandas==2.1.4
+openpyxl==3.1.2
+
+# Security and Encryption
+bcrypt==4.1.2
+
+# Build Tool for Executable
+pyinstaller==6.3.0
+
+# Standard Library Extensions (if needed)
+# These are typically included with Python but listed for completeness
+setuptools>=65.0.0
+wheel>=0.37.0
