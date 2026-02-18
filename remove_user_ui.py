@@ -2,16 +2,19 @@
 Remove User Screen - Delete user accounts
 """
 import os
+import pandas as pd
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                               QComboBox, QPushButton, QMessageBox, QLineEdit)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap
-from database_desktop import get_all_users, remove_user
+from database_desktop import get_all_users, remove_user, get_all_records_from_table, get_current_table_info
 
 
 class RemoveUserScreen(QWidget):
     def __init__(self):
         super().__init__()
+        # Load table configuration
+        self.table_config = get_current_table_info()
         self.all_users = []  # Store all users for filtering
         self.init_ui()
         
@@ -30,41 +33,52 @@ class RemoveUserScreen(QWidget):
         layout.setSpacing(15)
         layout.setContentsMargins(40, 30, 40, 30)
         
+        layout.addStretch(1)
+        
         # Top section with Logo
         top_layout = QHBoxLayout()
         logo_label = QLabel()
         logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo 1.png")
         if os.path.exists(logo_path):
             logo = QPixmap(logo_path)
-            scaled_logo = logo.scaledToHeight(60, Qt.TransformationMode.SmoothTransformation)
+            scaled_logo = logo.scaledToHeight(90, Qt.TransformationMode.SmoothTransformation)
             logo_label.setPixmap(scaled_logo)
         top_layout.addWidget(logo_label)
         top_layout.addStretch()
         layout.addLayout(top_layout)
+        
+        # Content container with width constraint
+        content_container = QHBoxLayout()
+        content_container.addStretch(1)
+        
+        # Content layout (form fields)
+        content_layout = QVBoxLayout()
+        content_layout.setSpacing(15)
+        content_layout.setContentsMargins(0, 0, 0, 0)
         
         # Title
         title = QLabel("🗑️ Remove User")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 22, QFont.Weight.Bold))
         title.setStyleSheet("color: #000000; background: transparent;")
-        layout.addWidget(title)
+        content_layout.addWidget(title)
         
-        layout.addSpacing(15)
+        content_layout.addSpacing(15)
         
         # Warning
         warning = QLabel("⚠️ Warning: This action cannot be undone!")
         warning.setAlignment(Qt.AlignmentFlag.AlignCenter)
         warning.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
         warning.setStyleSheet("color: #c0392b; background-color: #fadbd8; padding: 16px; border-radius: 10px; border: 1px solid #e74c3c;")
-        layout.addWidget(warning)
+        content_layout.addWidget(warning)
         
-        layout.addSpacing(20)
+        content_layout.addSpacing(20)
         
         # Search field
         search_label = QLabel("🔍 Search User")
         search_label.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
         search_label.setStyleSheet("color: #2c3e50; background: transparent;")
-        layout.addWidget(search_label)
+        content_layout.addWidget(search_label)
         
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Type name or email to search...")
@@ -84,15 +98,15 @@ class RemoveUserScreen(QWidget):
             }
         """)
         self.search_input.textChanged.connect(self.filter_users)
-        layout.addWidget(self.search_input)
+        content_layout.addWidget(self.search_input)
         
-        layout.addSpacing(15)
+        content_layout.addSpacing(15)
         
         # User selection
         user_label = QLabel("👤 Select User to Remove")
         user_label.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
         user_label.setStyleSheet("color: #2c3e50; background: transparent;")
-        layout.addWidget(user_label)
+        content_layout.addWidget(user_label)
         
         self.user_combo = QComboBox()
         self.user_combo.setMinimumHeight(48)
@@ -130,9 +144,9 @@ class RemoveUserScreen(QWidget):
                 border: 2px solid #C5B39F;
             }
         """)
-        layout.addWidget(self.user_combo)
+        content_layout.addWidget(self.user_combo)
         
-        layout.addStretch(1)
+        content_layout.addStretch(2)
         
         # Buttons
         button_layout = QHBoxLayout()
@@ -184,32 +198,71 @@ class RemoveUserScreen(QWidget):
         """)
         button_layout.addWidget(self.close_button)
         
-        layout.addLayout(button_layout)
+        content_layout.addLayout(button_layout)
+        
+        # Close content container
+        content_container.addLayout(content_layout)
+        content_container.addStretch(1)
+        
+        layout.addLayout(content_container)
+        
+        layout.addStretch(1)
         
         # Load users after buttons are created
         self.load_users()
         
     def load_users(self):
+        """Load users from the default users table."""
+        # Load from default users table
         df = get_all_users()
         self.all_users = df  # Store for filtering
         self.populate_from_df(df)
     
     def populate_from_df(self, df):
-        """Populate combo box from DataFrame."""
+        """Populate combo box from DataFrame, sorted by ID."""
         self.user_combo.clear()
         self.remove_button.setEnabled(True)
         
         if not df.empty:
-            for _, row in df.iterrows():
-                display_text = f"{row['Name']} ({row['Email']})"
-                self.user_combo.addItem(display_text, row['Email'])
+            # Sort by ID if available (check uppercase first)
+            if 'ID' in df.columns:
+                df_sorted = df.sort_values('ID')
+            elif 'id' in df.columns:
+                df_sorted = df.sort_values('id')
+            else:
+                df_sorted = df
+            
+            for _, row in df_sorted.iterrows():
+                # Construct display text - database uses 'ID', 'Name', 'Email' (capitalized)
+                if 'ID' in df.columns and 'Name' in df.columns and 'Email' in df.columns:
+                    display_text = f"[ID: {row['ID']}] {row['Name']} ({row['Email']})"
+                    self.user_combo.addItem(display_text, row['Email'])
+                elif 'id' in df.columns and 'name' in df.columns and 'email' in df.columns:
+                    display_text = f"[ID: {row['id']}] {row['name']} ({row['email']})"
+                    self.user_combo.addItem(display_text, row['email'])
+                elif 'Name' in df.columns and 'Email' in df.columns:
+                    display_text = f"{row['Name']} ({row['Email']})"
+                    self.user_combo.addItem(display_text, row['Email'])
+                else:
+                    # Fallback for custom tables
+                    cols = df.columns.tolist()
+                    if len(cols) >= 3:
+                        display_text = f"[ID: {row[cols[0]]}] {row[cols[1]]} ({row[cols[2]]})"
+                        self.user_combo.addItem(display_text, str(row[cols[0]]))
+                    elif len(cols) >= 2:
+                        display_text = f"{row[cols[1]]} ({row[cols[0]]})"
+                        self.user_combo.addItem(display_text, str(row[cols[0]]))
+                    else:
+                        display_text = str(row[cols[0]])
+                        self.user_combo.addItem(display_text, str(row[cols[0]]))
         else:
             self.user_combo.addItem("No users found", None)
             self.remove_button.setEnabled(False)
     
     def filter_users(self, search_text):
-        """Filter users based on search text."""
-        search_text = search_text.lower().strip()
+        """Filter users by name or ID - simple and accurate."""
+        search_text = search_text.strip()
+        search_lower = search_text.lower()
         
         if not search_text:
             # If search is empty, show all users
@@ -222,17 +275,36 @@ class RemoveUserScreen(QWidget):
             self.user_combo.addItem("No users found", None)
             return
         
-        # Search in both Name and Email columns
-        filtered_df = self.all_users[
-            self.all_users['Name'].str.lower().str.contains(search_text, na=False) |
-            self.all_users['Email'].str.lower().str.contains(search_text, na=False)
-        ]
+        # Check if search is numeric (ID search)
+        is_numeric = search_text.isdigit()
+        
+        if is_numeric:
+            # Search by exact ID match (database uses 'ID' uppercase)
+            if 'ID' in self.all_users.columns:
+                mask = self.all_users['ID'].astype(str) == search_text
+            elif 'id' in self.all_users.columns:
+                mask = self.all_users['id'].astype(str) == search_text
+            else:
+                mask = pd.Series([False] * len(self.all_users))
+        else:
+            # Search by name (partial match) - database uses 'Name' capitalized
+            if 'Name' in self.all_users.columns:
+                mask = self.all_users['Name'].astype(str).str.lower().str.contains(search_lower, na=False, regex=False)
+            elif 'name' in self.all_users.columns:
+                mask = self.all_users['name'].astype(str).str.lower().str.contains(search_lower, na=False, regex=False)
+            else:
+                mask = pd.Series([False] * len(self.all_users))
+        
+        filtered_df = self.all_users[mask]
         
         if not filtered_df.empty:
             self.populate_from_df(filtered_df)
         else:
             self.user_combo.clear()
-            self.user_combo.addItem("❌ No users found", None)
+            if is_numeric:
+                self.user_combo.addItem(f"❌ No user with ID '{search_text}'", None)
+            else:
+                self.user_combo.addItem(f"❌ No user named '{search_text}'", None)
     
     def handle_remove_user(self):
         email = self.user_combo.currentData()
@@ -249,6 +321,7 @@ class RemoveUserScreen(QWidget):
         )
         
         if reply == QMessageBox.StandardButton.Yes:
+            # Delete from default users table (audit logging handled in remove_user function)
             success, message = remove_user(email)
             
             if success:

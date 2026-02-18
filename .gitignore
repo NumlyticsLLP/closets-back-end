@@ -43,6 +43,18 @@ Thumbs.db
 # Test Files
 test_*.py
 *_test.py
+insert_test_data.py
+
+# Build/Icon Utilities
+make_icon.py
+
+# Runtime config (generated per session)
+session_db_config_*.json
+file_storage_paths.json
+
+# Distribution archives
+dist.zip
+*.zip
 
 
 

@@ -2,11 +2,106 @@
   "test": {
     "connection_string": "localhost:3306/user_management",
     "username": "root",
-    "password": "0000"
+    "password": "0000",
+    "table": "users_audit",
+    "columns": [],
+    "database": "user_management"
   },
   "production": {
     "connection_string": "localhost:3306/user_management",
     "username": "root",
-    "password": "0000"
+    "password": "0000",
+    "table": "users_audit",
+    "columns": [
+      {
+        "name": "audit_id",
+        "type": "int",
+        "null": "NO",
+        "key": "PRI",
+        "default": null,
+        "extra": "auto_increment"
+      },
+      {
+        "name": "audit_action",
+        "type": "enum('INSERT','UPDATE','DELETE')",
+        "null": "NO",
+        "key": "MUL",
+        "default": null,
+        "extra": ""
+      },
+      {
+        "name": "audit_user",
+        "type": "varchar(100)",
+        "null": "NO",
+        "key": "",
+        "default": "user()",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "userid",
+        "type": "int",
+        "null": "NO",
+        "key": "MUL",
+        "default": null,
+        "extra": ""
+      },
+      {
+        "name": "email",
+        "type": "varchar(100)",
+        "null": "NO",
+        "key": "",
+        "default": null,
+        "extra": ""
+      },
+      {
+        "name": "designername",
+        "type": "varchar(100)",
+        "null": "NO",
+        "key": "",
+        "default": null,
+        "extra": ""
+      },
+      {
+        "name": "password",
+        "type": "varchar(255)",
+        "null": "NO",
+        "key": "",
+        "default": null,
+        "extra": ""
+      },
+      {
+        "name": "role",
+        "type": "varchar(50)",
+        "null": "NO",
+        "key": "",
+        "default": null,
+        "extra": ""
+      },
+      {
+        "name": "effective_start_date",
+        "type": "datetime",
+        "null": "NO",
+        "key": "MUL",
+        "default": "CURRENT_TIMESTAMP",
+        "extra": "DEFAULT_GENERATED"
+      },
+      {
+        "name": "effective_end_date",
+        "type": "datetime",
+        "null": "YES",
+        "key": "",
+        "default": null,
+        "extra": ""
+      },
+      {
+        "name": "is_current",
+        "type": "tinyint(1)",
+        "null": "NO",
+        "key": "",
+        "default": "1",
+        "extra": ""
+      }
+    ],
+    "database": "user_management"
   }
 }

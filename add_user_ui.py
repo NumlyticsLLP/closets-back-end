@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                               QLineEdit, QPushButton, QMessageBox, QComboBox, QFileDialog)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap
-from database_desktop import add_user
+from database_desktop import add_user, get_all_users, get_all_records_from_table, get_current_table_info
 from utils import gen_password
 from file_storage_dialog import FileStorageDialog
 from file_storage_utils import FileStorageManager
@@ -21,6 +21,8 @@ class AddUserScreen(QWidget):
     
     def __init__(self):
         super().__init__()
+        # Load table configuration
+        self.table_config = get_current_table_info()
         self.init_ui()
     
     def load_saved_path(self):
@@ -58,32 +60,43 @@ class AddUserScreen(QWidget):
         layout.setSpacing(12)
         layout.setContentsMargins(40, 30, 40, 30)
         
+        layout.addStretch(1)
+        
         # Top section with Logo
         top_layout = QHBoxLayout()
         logo_label = QLabel()
         logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo 1.png")
         if os.path.exists(logo_path):
             logo = QPixmap(logo_path)
-            scaled_logo = logo.scaledToHeight(60, Qt.TransformationMode.SmoothTransformation)
+            scaled_logo = logo.scaledToHeight(90, Qt.TransformationMode.SmoothTransformation)
             logo_label.setPixmap(scaled_logo)
         top_layout.addWidget(logo_label)
         top_layout.addStretch()
         layout.addLayout(top_layout)
+        
+        # Content container with width constraint
+        content_container = QHBoxLayout()
+        content_container.addStretch(1)
+        
+        # Content layout (form fields)
+        content_layout = QVBoxLayout()
+        content_layout.setSpacing(12)
+        content_layout.setContentsMargins(0, 0, 0, 0)
         
         # Title
         title = QLabel("➕ Add New User")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 22, QFont.Weight.Bold))
         title.setStyleSheet("color: #000000; background: transparent;")
-        layout.addWidget(title)
+        content_layout.addWidget(title)
         
-        layout.addSpacing(20)
+        content_layout.addSpacing(20)
         
         # Name field
         name_label = QLabel("👤 Full Name")
         name_label.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
         name_label.setStyleSheet("color: #2c3e50; background: transparent;")
-        layout.addWidget(name_label)
+        content_layout.addWidget(name_label)
         
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("John Doe")
@@ -106,15 +119,15 @@ class AddUserScreen(QWidget):
                 background-color: #ffffff;
             }
         """)
-        layout.addWidget(self.name_input)
+        content_layout.addWidget(self.name_input)
         
-        layout.addSpacing(10)
+        content_layout.addSpacing(10)
         
         # Email field
         email_label = QLabel("📧 Email Address")
         email_label.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
         email_label.setStyleSheet("color: #2c3e50; background: transparent;")
-        layout.addWidget(email_label)
+        content_layout.addWidget(email_label)
         
         self.email_input = QLineEdit()
         self.email_input.setPlaceholderText("john.doe@example.com")
@@ -137,15 +150,15 @@ class AddUserScreen(QWidget):
                 background-color: #ffffff;
             }
         """)
-        layout.addWidget(self.email_input)
+        content_layout.addWidget(self.email_input)
         
-        layout.addSpacing(10)
+        content_layout.addSpacing(10)
         
         # Role field
         role_label = QLabel("🔰 Role")
         role_label.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
         role_label.setStyleSheet("color: #2c3e50; background: transparent;")
-        layout.addWidget(role_label)
+        content_layout.addWidget(role_label)
         
         self.role_combo = QComboBox()
         self.role_combo.addItems(["user", "admin"])
@@ -184,18 +197,20 @@ class AddUserScreen(QWidget):
                 border: 2px solid #C5B39F;
             }
         """)
-        layout.addWidget(self.role_combo)
+        content_layout.addWidget(self.role_combo)
         
-        layout.addSpacing(15)
+        content_layout.addSpacing(15)
         
         # Info label
         info_label = QLabel("🎲 Password will be auto-generated based on the user's name")
         info_label.setFont(QFont("Segoe UI", 10))
         info_label.setStyleSheet("color: #16a085; padding: 14px; background-color: #e8f8f5; border-radius: 10px; border: 1px solid #a7dcd1;")
         info_label.setWordWrap(True)
-        layout.addWidget(info_label)
+        content_layout.addWidget(info_label)
         
-        layout.addSpacing(20)
+        content_layout.addSpacing(20)
+        
+        content_layout.addStretch(2)
         
         # Buttons
         button_layout = QHBoxLayout()
@@ -250,7 +265,17 @@ class AddUserScreen(QWidget):
         """)
         button_layout.addWidget(self.close_button)
         
-        layout.addLayout(button_layout)
+        content_layout.addLayout(button_layout)
+        
+        # Custom tables are now supported with generic CRUD operations
+        
+        # Close content container
+        content_container.addLayout(content_layout)
+        content_container.addStretch(1)
+        
+        layout.addLayout(content_container)
+        
+        layout.addStretch(1)
         
     def handle_add_user(self):
         name = self.name_input.text().strip()
@@ -264,7 +289,7 @@ class AddUserScreen(QWidget):
         # Generate password
         password = gen_password(name)
         
-        # Add user to database
+        # Add user to default users table (audit logging handled in add_user function)
         success, message = add_user(name, email, password, role)
         
         if success:
@@ -318,5 +343,4 @@ class AddUserScreen(QWidget):
             self.email_input.clear()
             self.role_combo.setCurrentIndex(0)
         else:
-            QMessageBox.warning(self, "Error", f"❌ {message}")
             QMessageBox.warning(self, "Error", f"❌ {message}")

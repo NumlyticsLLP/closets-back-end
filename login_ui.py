@@ -1,14 +1,11 @@
 """
 Login Screen - Admin Authentication with Mode Support
 """
-import logging
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                               QLineEdit, QPushButton, QMessageBox, QFrame)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPalette, QColor
 from database_desktop import verify_admin_credentials, get_current_mode, get_mode_info
-
-logger = logging.getLogger(__name__)
 
 
 class LoginScreen(QWidget):
@@ -30,7 +27,7 @@ class LoginScreen(QWidget):
         # Set background
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#f5f6fa"))
+        palette.setColor(QPalette.ColorRole.Window, QColor("#ffffff"))
         self.setPalette(palette)
         
         # Main layout
@@ -100,6 +97,11 @@ class LoginScreen(QWidget):
         password_label.setStyleSheet("color: #2c3e50; background: transparent;")
         layout.addWidget(password_label)
         
+        # Password field with eye button
+        password_container = QHBoxLayout()
+        password_container.setSpacing(0)
+        password_container.setContentsMargins(0, 0, 0, 0)
+        
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.setPlaceholderText("Enter your password")
@@ -107,7 +109,7 @@ class LoginScreen(QWidget):
         self.password_input.setFont(QFont("Segoe UI", 11))
         self.password_input.setStyleSheet("""
             QLineEdit {
-                padding: 12px 18px;
+                padding: 12px 18px 12px 18px;
                 border: 2px solid #e0e0e0;
                 border-radius: 12px;
                 background-color: #ffffff;
@@ -123,7 +125,35 @@ class LoginScreen(QWidget):
             }
         """)
         self.password_input.returnPressed.connect(self.handle_login)
-        layout.addWidget(self.password_input)
+        password_container.addWidget(self.password_input, 1)
+        
+        # Eye button for show/hide password
+        self.show_password_btn = QPushButton("👁️")
+        self.show_password_btn.setCheckable(True)
+        self.show_password_btn.setMaximumWidth(50)
+        self.show_password_btn.setMinimumHeight(50)
+        self.show_password_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.show_password_btn.clicked.connect(self.toggle_password_visibility)
+        self.show_password_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #000000;
+                border: none;
+                padding: 12px;
+                font-size: 18px;
+            }
+            QPushButton:hover {
+                background-color: #f5f5f5;
+            }
+            QPushButton:pressed {
+                background-color: #e0e0e0;
+            }
+        """)
+        password_container.addWidget(self.show_password_btn)
+        
+        password_widget = QWidget()
+        password_widget.setLayout(password_container)
+        layout.addWidget(password_widget)
         
         layout.addSpacing(20)
         
@@ -186,41 +216,24 @@ class LoginScreen(QWidget):
             email = self.email_input.text().strip()
             password = self.password_input.text()
             
-            logger.info("="*60)
-            logger.info("Login button clicked")
-            logger.info(f"Email entered: {email}")
-            
             if not email or not password:
-                logger.warning("Login failed: Empty email or password")
                 QMessageBox.warning(self, "Error", "⚠️ Please enter both email and password")
                 return
             
-            logger.info("Authenticating user...")
             success, user_data = verify_admin_credentials(email, password)
             
             if success and user_data:
-                logger.info(f"Login successful for: {user_data['name']}")
-                logger.info("Opening dashboard...")
-                
                 from dashboard_ui import Dashboard
                 self.dashboard = Dashboard(user_data)
                 self.dashboard.show()
                 
-                logger.info("Dashboard window displayed")
-                logger.info("Closing login window...")
                 self.close()
-                logger.info("Login window closed")
             else:
-                logger.warning("Login failed: Invalid credentials")
                 error_msg = user_data.get('error', 'Invalid email or password') if user_data else 'Invalid email or password'
                 QMessageBox.warning(self, "Login Failed", f"❌ {error_msg}")
-                
-            logger.info("="*60)
             
         except Exception as e:
-            logger.error(f"Login error: {str(e)}")
             import traceback
-            logger.error(traceback.format_exc())
             QMessageBox.critical(self, "Error", f"❌ An error occurred: {str(e)}")
     
     def add_mode_indicator(self, layout, mode_info):
@@ -274,4 +287,14 @@ class LoginScreen(QWidget):
         db_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         mode_layout.addWidget(db_info)
         
-        layout.addWidget(mode_frame)
+        layout.addWidget(mode_frame)    
+    def toggle_password_visibility(self):
+        """Toggle password field visibility."""
+        if self.show_password_btn.isChecked():
+            self.password_input.setEchoMode(QLineEdit.EchoMode.Normal)
+            self.show_password_btn.setText("🚫")
+            self.show_password_btn.setToolTip("Hide password")
+        else:
+            self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
+            self.show_password_btn.setText("👁️")
+            self.show_password_btn.setToolTip("Show password")

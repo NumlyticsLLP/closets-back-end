@@ -4,21 +4,54 @@ Password Generator Application - Main Entry Point with Mode Selection
 
 import sys
 import os
-import logging
 from datetime import datetime
 from PyQt6.QtWidgets import QApplication, QMessageBox, QSplashScreen, QLabel, QDialog
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QPixmap, QIcon
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# Windows: set AppUserModelID BEFORE QApplication is created so taskbar shows the icon
+if sys.platform == "win32":
+    try:
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ClosetsByDesign.IdentityManager.1.0")
+    except Exception:
+        pass
+
+def _set_taskbar_icon_win32(widget, ico_path: str):
+    """Directly send WM_SETICON to the native HWND — the only reliable method on Windows."""
+    if sys.platform != "win32" or not os.path.exists(ico_path):
+        return
+    try:
+        import ctypes
+        WM_SETICON      = 0x0080
+        ICON_SMALL      = 0
+        ICON_BIG        = 1
+        LR_LOADFROMFILE = 0x0010
+        IMAGE_ICON      = 1
+        hwnd = int(widget.winId())
+
+        # Load each size explicitly so Windows never upscales/blurs
+        sm = ctypes.windll.user32.GetSystemMetrics(49)  # SM_CXSMICON
+        bg = ctypes.windll.user32.GetSystemMetrics(11)  # SM_CXICON
+        if sm == 0: sm = 16
+        if bg == 0: bg = 32
+
+        hicon_small = ctypes.windll.user32.LoadImageW(
+            None, ico_path, IMAGE_ICON, sm, sm, LR_LOADFROMFILE
+        )
+        hicon_big = ctypes.windll.user32.LoadImageW(
+            None, ico_path, IMAGE_ICON, bg, bg, LR_LOADFROMFILE
+        )
+        if hicon_small:
+            ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, hicon_small)
+        if hicon_big:
+            ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, hicon_big)
+    except Exception:
+        pass
 
 # Import application components
 from mode_selection_dialog import ModeSelectionDialog
+from dashboard_ui import Dashboard
 from config import load_db_credentials_from_file, show_credentials_dialog, create_sample_credentials_file
 
 class PasswordGeneratorApp:
@@ -26,37 +59,38 @@ class PasswordGeneratorApp:
     
     def __init__(self):
         self.app = QApplication(sys.argv)
-        self.app.setApplicationName("Password Generator")
-        self.app.setApplicationDisplayName("Password Generator")
+        self.app.setApplicationName("Identity Manager")
+        self.app.setApplicationDisplayName("Identity Manager")
         self.app.setApplicationVersion("1.0")
         
-        # Set application icon globally
-        icon_path = os.path.join(os.path.dirname(__file__), "assets", "Logo without text.png")
-        if os.path.exists(icon_path):
-            app_icon = QIcon(icon_path)
-            self.app.setWindowIcon(app_icon)
-        
-        # Set taskbar properties
-        self.setup_taskbar_visibility()
+        # Load icon once and reuse everywhere
+        self._app_icon = self._load_icon()
+        if self._app_icon:
+            self.app.setWindowIcon(self._app_icon)
         
         self.current_mode = None
         self.db_config = {}
+
+    def _load_icon(self):
+        """Load the best available icon for the application."""
+        base = os.path.dirname(__file__)
+        candidates = [
+            os.path.join(base, "app_icon.ico"),
+            os.path.join(base, "assets", "Logo without text.png"),
+            os.path.join(base, "assets", "Logo 1.png"),
+        ]
+        for path in candidates:
+            if os.path.exists(path):
+                icon = QIcon(path)
+                if not icon.isNull():
+                    return icon
+        return None
     
     def setup_taskbar_visibility(self):
         """Ensure the application shows properly in taskbar."""
         try:
-            # Set application properties for proper taskbar display
             self.app.setQuitOnLastWindowClosed(True)
-            
-            # Windows-specific taskbar setup
-            if sys.platform == "win32":
-                try:
-                    import ctypes
-                    # Set the app user model ID for proper taskbar grouping
-                    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("PasswordGenerator.1.0")
-                except Exception as e:
-                    logging.warning(f"Could not set Windows taskbar ID: {e}")
-        except Exception as e:
+        except Exception:
             pass
     
     def show_mode_selection(self):
@@ -95,20 +129,13 @@ class PasswordGeneratorApp:
         self.start_main_application()
     
     def show_credentials_confirmation(self):
-        """Show database credentials to the user for confirmation."""
+        """Show database connection status to the user (without exposing credentials)."""
         mode_icon = "🧪" if self.current_mode == "test" else "🏭"
         
         credentials_info = f"""
 {mode_icon} Running in {self.current_mode.upper()} Mode
 
-📊 Database Configuration:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔗 Connection: {self.db_config['connection_string']}
-👤 Username: {self.db_config['username']}
-🔐 Password: {self.db_config['password']}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✅ Application will now connect to the {self.current_mode} database.
+✅ Application will now connect to the configured {self.current_mode} database.
 
 💡 You can change the mode by restarting the application.
         """
@@ -150,11 +177,9 @@ class PasswordGeneratorApp:
                 'mode': self.current_mode
             }
             
-            logging.info(f"📋 Parsed DB Config: {host}:{port}/{database} (mode: {self.current_mode})")
             return db_config
             
         except Exception as e:
-            logging.error(f"❌ Error parsing connection string: {e}")
             QMessageBox.critical(
                 None, 
                 "Configuration Error",
@@ -168,11 +193,27 @@ class PasswordGeneratorApp:
             # Parse the connection string
             parsed_config = self.parse_connection_string()
             if not parsed_config:
-                logging.error("❌ Failed to parse connection string")
+                self.show_credentials_error("Invalid Configuration", "Please enter a valid connection string in the format: host:port/database")
+                self.restart_mode_selection()
                 return
             
             # Set up database configuration for the application
             self.setup_database_config(parsed_config)
+            
+            # Test database connection BEFORE proceeding
+            if not self.test_database_connection(parsed_config):
+                self.show_credentials_error(
+                    "Database Connection Failed",
+                    "❌ Could not connect to the database with provided credentials.\n\n"
+                    "Please verify:\n"
+                    "• Database host and port are correct\n"
+                    "• Username and password are correct\n"
+                    "• MySQL server is running\n"
+                    "• Database exists\n\n"
+                    "Click OK to re-enter credentials."
+                )
+                self.restart_mode_selection()
+                return
             
             # Create generic user data for dashboard since no admin login needed
             user_data = {
@@ -181,83 +222,28 @@ class PasswordGeneratorApp:
                 'email': f'{self.current_mode}@system.local'
             }
             
-            # Test database connection before creating dashboard
-            try:
-                from dashboard_ui import Dashboard
-                from database_desktop import get_db_connection, initialize_database
-                
-                conn = get_db_connection()
-                if conn:
-                    conn.close()
-                else:
-                    # Show warning but continue
-                    from PyQt6.QtWidgets import QMessageBox
-                    QMessageBox.warning(
-                        None,
-                        "Database Connection Warning",
-                        "⚠️ Could not connect to MySQL database.\n\n"
-                        "Possible causes:\n"
-                        "• MySQL server is not running\n"
-                        "• Invalid credentials\n"
-                        "• Database doesn't exist\n\n"
-                        "The application will continue with limited functionality.\n"
-                        "User statistics will show 'N/A'."
-                    )
-                    
-            except Exception as db_test_err:
-                logging.error(f"❌ Database test failed: {db_test_err}")
-                logging.warning("⚠️ Dashboard will continue with limited functionality")
-                
-                # Show error dialog but continue
-                from PyQt6.QtWidgets import QMessageBox
-                error_msg = str(db_test_err)
-                if "2003" in error_msg or "Can't connect" in error_msg:
-                    user_msg = ("❌ MySQL Server Not Running\n\n"
-                               "Please start your MySQL server and restart the application.\n\n"
-                               "The app will continue with limited functionality.")
-                elif "1045" in error_msg or "Access denied" in error_msg:
-                    user_msg = ("❌ Database Access Denied\n\n"
-                               "Please check your username and password.\n\n"
-                               "The app will continue with limited functionality.")
-                else:
-                    user_msg = (f"❌ Database Connection Error\n\n{error_msg}\n\n"
-                               "The app will continue with limited functionality.")
-                
-                QMessageBox.warning(None, "Database Error", user_msg)
-            
             self.dashboard = Dashboard(user_data)
             
-            # Set taskbar icon for dashboard
-            icon_path = os.path.join(os.path.dirname(__file__), "assets", "Logo without text.png")
-            if os.path.exists(icon_path):
-                self.dashboard.setWindowIcon(QIcon(icon_path))
-            
+            # Set window flags FIRST (before icon, before show)
             self.dashboard.setWindowFlags(
                 Qt.WindowType.Window |
                 Qt.WindowType.WindowMinimizeButtonHint |
                 Qt.WindowType.WindowMaximizeButtonHint |
                 Qt.WindowType.WindowCloseButtonHint
             )
+
+            if self._app_icon:
+                self.dashboard.setWindowIcon(self._app_icon)
             
             self.dashboard.show()
+
+            # After show() the native HWND exists — use WinAPI directly for reliable taskbar icon
+            _ico = os.path.join(os.path.dirname(__file__), "app_icon.ico")
+            _set_taskbar_icon_win32(self.dashboard, _ico)
             
         except Exception as e:
-            logging.error(f"❌ Error starting main application: {e}")
-            import traceback
-            logging.error(f"📋 Full traceback: {traceback.format_exc()}")
-            
-            # Show error dialog to user
-            from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.critical(
-                None,
-                "Application Error",
-                f"Failed to start the application:\n\n{str(e)}\n\nCheck the logs for more details."
-            )
-            QMessageBox.critical(
-                None,
-                "Startup Error",
-                f"Failed to start the application.\n\nError: {e}"
-            )
+            self.show_credentials_error("Application Error", f"Failed to start the application:\n\n{str(e)}")
+            self.restart_mode_selection()
     
     def setup_database_config(self, config):
         """Set up database configuration for the application."""
@@ -271,18 +257,92 @@ class PasswordGeneratorApp:
         except Exception as e:
             pass
     
+    def test_database_connection(self, config):
+        """Test database connection with the provided credentials."""
+        try:
+            import mysql.connector
+            
+            # Create connection config without the mode field
+            test_config = config.copy()
+            test_config.pop('mode', None)
+            test_config['use_pure'] = True
+            test_config['autocommit'] = True
+            test_config['connection_timeout'] = 10
+            
+            # Try to connect
+            conn = mysql.connector.connect(**test_config)
+            cursor = conn.cursor()
+            
+            # Test the connection with a simple query
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+            
+            return True
+            
+        except mysql.connector.errors.ProgrammingError as e:
+            return False
+        except mysql.connector.errors.DatabaseError as e:
+            return False
+        except mysql.connector.errors.InterfaceError as e:
+            return False
+        except Exception as e:
+            return False
+    
+    def show_credentials_error(self, title, message):
+        """Show error message for credentials issue."""
+        QMessageBox.critical(None, f"❌ {title}", message)
+    
+    def restart_mode_selection(self):
+        """Close current setup and restart mode selection."""
+        if hasattr(self, 'dashboard') and self.dashboard is not None:
+            self.dashboard.close()
+        
+        # Reset configuration
+        self.current_mode = None
+        self.db_config = {}
+        
+        # Show mode selection dialog again
+        QTimer.singleShot(500, self.show_mode_selection)
+    
     def run(self):
         """Run the application."""
         try:
-            # Show mode selection first
-            if not self.show_mode_selection():
-                return 0
+            # Create generic user data for dashboard with no initial connection
+            user_data = {
+                'name': 'Administrator',
+                'role': 'Admin',
+                'email': 'admin@system.local',
+                'connected': False  # Start with no connection
+            }
+            
+            # Go directly to dashboard without mode selection
+            self.dashboard = Dashboard(user_data)
+            
+            # Set window flags FIRST (before icon, before show)
+            self.dashboard.setWindowFlags(
+                Qt.WindowType.Window |
+                Qt.WindowType.WindowMinimizeButtonHint |
+                Qt.WindowType.WindowMaximizeButtonHint |
+                Qt.WindowType.WindowCloseButtonHint
+            )
+
+            if self._app_icon:
+                self.dashboard.setWindowIcon(self._app_icon)
+
+            self.dashboard.show()
+
+            # After show() the native HWND exists — use WinAPI directly for reliable taskbar icon
+            _ico = os.path.join(os.path.dirname(__file__), "app_icon.ico")
+            _set_taskbar_icon_win32(self.dashboard, _ico)
             
             # Run the Qt application loop
             return self.app.exec()
             
         except Exception as e:
-            logging.error(f"❌ Application error: {e}")
+            QMessageBox.critical(None, "Application Error", f"Failed to start the application:\n\n{str(e)}")
             return 1
         finally:
             self.cleanup_session_files()
@@ -311,77 +371,11 @@ def main():
         return app.run()
         
     except KeyboardInterrupt:
-        logging.info("Application interrupted by user")
         return 0
     except Exception as e:
-        logging.error(f"Fatal error: {e}")
         return 1
 
 
 if __name__ == "__main__":
     sys.exit(main())
 
-
-def main():
-    """Initialize and run the desktop application."""
-    logger.info("="*60)
-    logger.info("Starting User Management System")
-    logger.info(f"Launch time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info("="*60)
-    
-    app = QApplication(sys.argv)
-    app.setApplicationName("User Management System")
-    app.setOrganizationName("Password Manager")
-    
-    logger.info("Initializing database configuration...")
-    
-    # Prompt for database credentials file
-    try:
-        if not show_credentials_dialog():
-            logger.error("Failed to configure database credentials")
-            return 1
-    except Exception as e:
-        logger.error(f"Error during credentials configuration: {e}")
-        try:
-            QMessageBox.critical(
-                QWidget(),
-                "Startup Error",
-                f"❌ Failed to configure database credentials:\n\n{e}\n\n"
-                f"🛠️ Please check your credentials file and try again."
-            )
-        except:
-            print(f"Startup error: {e}")
-        return 1
-    
-    logger.info("Database configuration completed successfully")
-    
-    # Initialize and show login screen
-    try:
-        logger.info("Initializing login screen...")
-        login_window = LoginScreen()
-        login_window.show()
-        logger.info("Application initialized successfully")
-        
-        # Start the application event loop
-        exit_code = app.exec()
-        logger.info(f"Application exited with code: {exit_code}")
-        logger.info("User Management System shutdown completed")
-        return exit_code
-        
-    except Exception as e:
-        logger.error(f"Error initializing application: {e}")
-        try:
-            QMessageBox.critical(
-                QWidget(),
-                "Application Error",
-                f"❌ Failed to start application:\n\n{e}\n\n"
-                f"🔧 Please check your installation and try again."
-            )
-        except:
-            print(f"Application error: {e}")
-        return 1
-
-
-if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)

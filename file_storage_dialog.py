@@ -237,8 +237,8 @@ class FileStorageDialog(QDialog):
             
             with open(config_file, 'w') as f:
                 json.dump(config, f, indent=2)
-        except Exception as e:
-            print(f"Could not save path preference: {e}")
+        except Exception:
+            pass
             
     def load_last_paths(self):
         """Load last used paths on dialog startup."""
