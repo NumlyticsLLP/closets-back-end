@@ -1,0 +1,56 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "staticSites_cbd_contract_test_name": {
+            "defaultValue": "cbd-contract-test",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Web/staticSites",
+            "apiVersion": "2024-11-01",
+            "name": "[parameters('staticSites_cbd_contract_test_name')]",
+            "location": "Central US",
+            "tags": {
+                "Test": "true"
+            },
+            "sku": {
+                "name": "Free",
+                "tier": "Free"
+            },
+            "properties": {
+                "repositoryUrl": "https://github.com/NumlyticsLLP/closets-front-end",
+                "branch": "Test",
+                "stagingEnvironmentPolicy": "Enabled",
+                "allowConfigFileUpdates": true,
+                "provider": "GitHub",
+                "enterpriseGradeCdnStatus": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Web/staticSites/basicAuth",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('staticSites_cbd_contract_test_name'), '/default')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/staticSites', parameters('staticSites_cbd_contract_test_name'))]"
+            ],
+            "properties": {
+                "applicableEnvironmentsMode": "SpecifiedEnvironments"
+            }
+        },
+        {
+            "type": "Microsoft.Web/staticSites/customDomains",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('staticSites_cbd_contract_test_name'), '/test.wemakegreatclosets.ca')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/staticSites', parameters('staticSites_cbd_contract_test_name'))]"
+            ],
+            "properties": {}
+        }
+    ]
+}
