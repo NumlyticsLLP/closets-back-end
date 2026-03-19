@@ -1,0 +1,3 @@
+cbdcontract-prod-server.mysql.database.azure.com:3306
+cbdcontract-prod-database
+cgoalymnuv
