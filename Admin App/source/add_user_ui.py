@@ -3,7 +3,7 @@ Add User Screen - Create new user accounts
 """
 import os
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                              QLineEdit, QPushButton, QMessageBox, QComboBox)
+                              QLineEdit, QPushButton, QMessageBox, QComboBox, QApplication)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap
 from database_desktop import add_user, get_all_users, get_all_records_from_table, get_current_table_info
@@ -18,7 +18,10 @@ class AddUserScreen(QWidget):
         super().__init__()
         # Load table configuration
         self.table_config = get_current_table_info()
+        self.last_credentials = None
         self.init_ui()
+
+
         
     def init_ui(self):
         self.setWindowTitle(" Add User")
@@ -217,6 +220,33 @@ class AddUserScreen(QWidget):
             }
         """)
         button_layout.addWidget(self.add_button)
+                # Copy Data button (hidden initially, shown after successful add)
+        self.copy_button = QPushButton("\U0001F4CB Copy Data")
+        self.copy_button.setMaximumWidth(200)
+        self.copy_button.clicked.connect(self.copy_credentials_to_clipboard)
+        self.copy_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.copy_button.setMinimumHeight(54)
+        self.copy_button.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        self.copy_button.setStyleSheet("""
+            QPushButton {
+                background-color: #F0EBE3;
+                color: #8B7355;
+                border: 1px solid #BAA787;
+                border-radius: 12px;
+                padding: 14px;
+            }
+            QPushButton:hover {
+                background-color: #BAA787;
+                color: #FFFFFF;
+            }
+            QPushButton:pressed {
+                background-color: #8B7355;
+                color: #FFFFFF;
+            }
+        """)
+        self.copy_button.setVisible(False)
+        button_layout.addWidget(self.copy_button)
+
         
         content_layout.addLayout(button_layout)
         
@@ -234,6 +264,8 @@ class AddUserScreen(QWidget):
         name = self.name_input.text().strip()
         email = self.email_input.text().strip()
         role = self.role_combo.currentText()
+    
+
         
         if not name or not email:
             QMessageBox.warning(self, "Error", "Please fill in all fields")
@@ -244,24 +276,22 @@ class AddUserScreen(QWidget):
         
         # Add user to default users table (audit logging handled in add_user function)
         success, message = add_user(name, email, password, role)
-        
         if success:
-            # Prepare user credentials text for clipboard
-            credentials_text = f"Name: {name}\nEmail: {email}\nPassword: {password}\nRole: {role}"
+            # Store credentials for copy button
+            self.last_credentials = f"Name: {name}\nEmail: {email}\nPassword: {password}\nRole: {role}"
             
-            # Copy to clipboard
-            from PyQt6.QtWidgets import QApplication
-            clipboard = QApplication.clipboard()
-            clipboard.setText(credentials_text)
+            # Show copy button
+            self.copy_button.setVisible(True)
             
-            # Show success message with copy confirmation
+            # Show success message (no auto-copy)
             QMessageBox.information(self, "Success", 
                 f"User added successfully!\n\n"
                 f"Name: {name}\n"
                 f"Email: {email}\n"
                 f"Password: {password}\n"
                 f"Role: {role}\n\n"
-                f"User credentials have been copied to clipboard.")
+                f"Click 'Copy Data' to copy credentials to clipboard.")
+
             
             # Clear fields
             self.name_input.clear()
@@ -269,3 +299,18 @@ class AddUserScreen(QWidget):
             self.role_combo.setCurrentIndex(0)
         else:
             QMessageBox.warning(self, "Error", f" {message}")
+
+
+    def copy_credentials_to_clipboard(self):
+        """Copy last added user credentials to clipboard."""
+        if self.last_credentials:
+            clipboard = QApplication.clipboard()
+            clipboard.setText(self.last_credentials)
+            QMessageBox.information(self, "Copied", "User credentials copied to clipboard!")
+
+
+        
+
+            
+
+

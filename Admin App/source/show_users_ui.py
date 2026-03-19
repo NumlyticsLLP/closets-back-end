@@ -44,10 +44,10 @@ class AuditTrailDialog(QDialog):
         layout.addWidget(title)
         
         # Info label
-        info_label = QLabel("Type 2 Slowly Changing Dimension - Shows all user versions and changes over time")
-        info_label.setFont(QFont("Segoe UI", 10))
-        info_label.setStyleSheet("color: #6B5E4E; background-color: transparent;")
-        layout.addWidget(info_label)
+        #info_label = QLabel("Type 2 Slowly Changing Dimension - Shows all user versions and changes over time")
+        #info_label.setFont(QFont("Segoe UI", 10))
+        #info_label.setStyleSheet("color: #6B5E4E; background-color: transparent;")
+        #layout.addWidget(info_label)
         
         # Audit Table
         self.audit_table = QTableWidget()
@@ -150,9 +150,9 @@ class AuditTrailDialog(QDialog):
                         if pd.notna(value):
                             value = str(value)[:19]  # Trim to YYYY-MM-DD HH:MM:SS
                         else:
-                            value = "CURRENT"  # Currently active version
+                           value = "NULL"  # Currently active version
                     elif col_name == 'is_current':
-                        value = "CURRENT" if value else "HISTORICAL"
+                        value = "Yes" if value else "No"
                     elif col_name == 'audit_action':
                         # Color code the action
                         if value == 'INSERT':
@@ -227,7 +227,7 @@ class AuditTrailDialog(QDialog):
 
         # Try numeric sort, fall back to string sort
         try:
-            data.sort(key=lambda row: float(row[col_index]) if row[col_index] not in ("", "CURRENT", "HISTORICAL") else float('-inf'),
+            data.sort(key=lambda row: float(row[col_index]) if row[col_index] not in ("", "NULL", "Yes", "No")  else float('-inf'),
                       reverse=not self.audit_sort_ascending)
         except (ValueError, TypeError):
             data.sort(key=lambda row: row[col_index].lower(), reverse=not self.audit_sort_ascending)
@@ -239,10 +239,10 @@ class AuditTrailDialog(QDialog):
                 item.setFont(QFont("Segoe UI", 10))
                 col_name_c = self.audit_table.horizontalHeaderItem(c).text()
                 if col_name_c == 'is_current':
-                    if value == "CURRENT":
+                    if value == "Yes":
                         item.setBackground(QColor("#E8F5E9"))
                         item.setForeground(QColor("#2E7D32"))
-                    elif value == "HISTORICAL":
+                    elif value == "No":
                         item.setBackground(QColor("#FFF8E1"))
                         item.setForeground(QColor("#8B7355"))
                 self.audit_table.setItem(r, c, item)
@@ -487,7 +487,7 @@ class ShowUsersScreen(QWidget):
             pass
 
     def init_ui(self):
-        self.setWindowTitle("All Users")
+        self.setWindowTitle("Active Users")
         self.setMinimumSize(900, 600)
         
         # Set background
@@ -790,7 +790,7 @@ class ShowUsersScreen(QWidget):
                 pass
         
         # Filter out columns we don't want to display in the UI
-        columns_to_hide = ['audit_user', 'effective_start_date', 'effective_end_date', 'audit_action']
+        columns_to_hide = ['audit_user', 'effective_start_date', 'effective_end_date', 'audit_action', 'is_current']
         display_df = df.drop(columns=[col for col in columns_to_hide if col in df.columns])
         
         # Set up table - clear completely first
