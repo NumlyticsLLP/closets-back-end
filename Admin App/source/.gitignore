@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyInstaller
+*.spec
+build/
+dist/
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database & Config
+*.db
+*.sqlite3
+download_path_config.json
+
+# Generated Files & Exports
+*.xlsx
+*.csv
+*.log
+*.out
+
+# Temporary Files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Test Files
+test_*.py
+*_test.py
+insert_test_data.py
+
+# Build/Icon Utilities
+make_icon.py
+
+# Runtime config (generated per session)
+session_db_config_*.json
+file_storage_paths.json
+
+# Distribution archives
+dist.zip
+*.zip
+
+
+
+# Sensitive Data
+.env
+config.py
+
+# Old/Backup Files
+Password Generator - wo credentials.py
+database.py
+style.css
+setup_*.py
+auto_setup.py
