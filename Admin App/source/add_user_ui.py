@@ -275,7 +275,7 @@ class AddUserScreen(QWidget):
         password = gen_password(name)
         
         # Add user to default users table (audit logging handled in add_user function)
-        success, message = add_user(name, email, password, role)
+        success, message = add_user(email, name, password, role)
         if success:
             # Store credentials for copy button
             self.last_credentials = f"Name: {name}\nEmail: {email}\nPassword: {password}\nRole: {role}"

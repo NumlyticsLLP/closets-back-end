@@ -172,37 +172,7 @@ class ChangePasswordScreen(QWidget):
         self.password_display.setVisible(False)
         content_layout.addWidget(self.password_display)
         
-        # Copy to clipboard button
-        self.copy_button = QPushButton("Copy to Clipboard")
-        self.copy_button.setMaximumWidth(180)
-        self.copy_button.clicked.connect(self.copy_password_to_clipboard)
-        self.copy_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.copy_button.setMinimumHeight(44)
-        self.copy_button.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        self.copy_button.setStyleSheet("""
-            QPushButton {
-                background-color: #F0EBE3;
-                color: #8B7355;
-                border: 1px solid #BAA787;
-                border-radius: 8px;
-                padding: 10px;
-            }
-            QPushButton:hover {
-                background-color: #BAA787;
-                color: #FFFFFF;
-            }
-            QPushButton:pressed {
-                background-color: #8B7355;
-                color: #FFFFFF;
-            }
-        """)
-        self.copy_button.setVisible(False)
-        
-        copy_layout = QHBoxLayout()
-        copy_layout.addStretch()
-        copy_layout.addWidget(self.copy_button)
-        copy_layout.addStretch()
-        content_layout.addLayout(copy_layout)
+
         
         content_layout.addStretch(2)
         
@@ -239,6 +209,36 @@ class ChangePasswordScreen(QWidget):
             }
         """)
         button_layout.addWidget(self.change_button)
+                # Copy Data button (hidden initially, shown after password change)
+        self.copy_button = QPushButton("  COPY DATA")
+        self.copy_button.setMaximumWidth(280)
+        self.copy_button.clicked.connect(self.copy_password_to_clipboard)
+        self.copy_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.copy_button.setMinimumHeight(54)
+        self.copy_button.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        self.copy_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #6B5E4E, stop:1 #8B7355);
+                color: #FFFFFF;
+                border: none;
+                border-radius: 12px;
+                padding: 14px;
+                font-weight: bold;
+                letter-spacing: 1px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #8B7355, stop:1 #BAA787);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #4D4D4D, stop:1 #6B5E4E);
+            }
+        """)
+        self.copy_button.setVisible(False)
+        button_layout.addWidget(self.copy_button)
+
         
         content_layout.addLayout(button_layout)
         
@@ -389,29 +389,31 @@ class ChangePasswordScreen(QWidget):
             self.password_display.setVisible(True)
             self.copy_button.setVisible(True)
             
-            # Prepare password change text for clipboard
-            credentials_text = f"User: {name}\nEmail: {email}\nNew Password: {new_password}"
-            
-            # Copy to clipboard
-            from PyQt6.QtWidgets import QApplication
-            clipboard = QApplication.clipboard()
-            clipboard.setText(credentials_text)
+
             
             # Show success message with copy confirmation
             QMessageBox.information(self, "Success", 
-                f"Password changed successfully!\n\n"
-                f"User: {name}\n"
-                f"Email: {email}\n"
-                f"New Password: {new_password}\n\n"
-                f"New password has been copied to clipboard.")
+                                    f"Password changed successfully!\n\n" 
+                                    f"User: {name}\n"
+                                    f"Email: {email}\n"
+                                    f"New Password: {new_password}\n\n"
+                                    f"Click 'Copy Data' to copy credentials to clipboard.")
                 
         else:
             QMessageBox.warning(self, "Error", f"{message}")
     
     def copy_password_to_clipboard(self):
-        """Copy the current password to clipboard."""
+        """Copy the current credentials to clipboard."""
         if hasattr(self, 'current_password') and self.current_password:
+            # Get current user info from combo box
+            user_data = self.user_combo.currentData()
+            if user_data and user_data[0]:
+                email, name = user_data
+                credentials_text = f"User: {name}\nEmail: {email}\nNew Password: {self.current_password}"
+            else:
+                credentials_text = f"New Password: {self.current_password}"
             from PyQt6.QtWidgets import QApplication
             clipboard = QApplication.clipboard()
-            clipboard.setText(self.current_password)
-            QMessageBox.information(self, "Copied", f"Password copied to clipboard!\n\n{self.current_password}")
+            clipboard.setText(credentials_text)
+            QMessageBox.information(self, "Copied", "Credentials copied to clipboard!")
+

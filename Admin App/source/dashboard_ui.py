@@ -249,10 +249,7 @@ class Dashboard(QWidget):
         self.show_btn.clicked.connect(self.open_show_users)
         nav_layout.addWidget(self.show_btn)
         
-        self.change_btn = NavButton(" Change Password", "Update user passwords")
-        self.change_btn.setMaximumWidth(300)
-        self.change_btn.clicked.connect(self.open_change_password)
-        nav_layout.addWidget(self.change_btn)
+
         
         self.remove_btn = NavButton("Remove User", "Delete user accounts")
         self.remove_btn.setMaximumWidth(300)
@@ -387,11 +384,7 @@ class Dashboard(QWidget):
         from show_users_ui import ShowUsersScreen
         self.show_window = ShowUsersScreen()
         self.show_window.show()
-    
-    def open_change_password(self):
-        from change_password_ui import ChangePasswordScreen
-        self.change_window = ChangePasswordScreen()
-        self.change_window.show()
+
     
     def open_remove_user(self):
         from remove_user_ui import RemoveUserScreen

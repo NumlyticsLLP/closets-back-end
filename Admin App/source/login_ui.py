@@ -169,7 +169,7 @@ class DatabaseCredentialsDialog(QWidget):
         pwd_card_layout.addLayout(password_row)
         
         # File info display - separate boxes
-        pwd_card_layout.addSpacing(24)
+        #pwd_card_layout.addSpacing(24)
 
         # Divider
         divider = QFrame()
@@ -177,14 +177,18 @@ class DatabaseCredentialsDialog(QWidget):
         divider.setStyleSheet("background-color: #D4C4A0; border: none; max-height: 1px;")
         divider.setFixedHeight(1)
         pwd_card_layout.addWidget(divider)
+        divider.setVisible(False)
 
-        pwd_card_layout.addSpacing(20)
+
+        #pwd_card_layout.addSpacing(20)
         
         info_label = QLabel("Database Information")
         info_label.setFont(QFont("Segoe UI", 10, QFont.Weight.DemiBold))
         info_label.setStyleSheet("color: #BAA787; background: transparent;")
         pwd_card_layout.addWidget(info_label)
-        pwd_card_layout.addSpacing(16)
+        info_label.setVisible(False)
+
+        #pwd_card_layout.addSpacing(16)
         self.host_display = QLineEdit()
         self.host_display.setReadOnly(True)
         self.host_display.setPlaceholderText("Host : Port")
@@ -200,8 +204,10 @@ class DatabaseCredentialsDialog(QWidget):
             }
         """)
         pwd_card_layout.addWidget(self.host_display)
+        self.host_display.setVisible(False)
+
         
-        pwd_card_layout.addSpacing(20)
+        #pwd_card_layout.addSpacing(20)
         
         # Database field
         self.database_display = QLineEdit()
@@ -219,8 +225,10 @@ class DatabaseCredentialsDialog(QWidget):
             }
         """)
         pwd_card_layout.addWidget(self.database_display)
+        self.database_display.setVisible(False)
+
         
-        pwd_card_layout.addSpacing(20)
+        #pwd_card_layout.addSpacing(20)
         
         # Username field
         self.username_display = QLineEdit()
@@ -238,6 +246,8 @@ class DatabaseCredentialsDialog(QWidget):
             }
         """)
         pwd_card_layout.addWidget(self.username_display)
+        self.username_display.setVisible(False)
+
         
         layout.addWidget(pwd_card)
 

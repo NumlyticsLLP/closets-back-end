@@ -681,6 +681,34 @@ class ShowUsersScreen(QWidget):
         button_layout.addWidget(audit_btn)
         
         layout.addLayout(button_layout)
+        # Change Password button
+        change_pwd_btn = QPushButton("CHANGE PASSWORD")
+        change_pwd_btn.setMaximumWidth(250)
+        change_pwd_btn.clicked.connect(self.open_change_password)
+        change_pwd_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        change_pwd_btn.setMinimumHeight(52)
+        change_pwd_btn.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        change_pwd_btn.setStyleSheet("""
+            QPushButton {
+            background-color: #FFF8E1;
+            color: #8B7355;
+            border: 1px solid #BAA787;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: bold;
+        }
+        QPushButton:hover {
+        background-color: #BAA787;
+        color: #FFFFFF;
+        border: 1px solid #8B7355;
+        }
+        QPushButton:pressed {
+        background-color: #8B7355;
+        color: #FFFFFF;
+        }
+                                     """)
+        button_layout.addWidget(change_pwd_btn)
+
         
     def format_date(self, date_value):
         """Format date to readable format with detailed time info."""
@@ -1001,7 +1029,7 @@ class ShowUsersScreen(QWidget):
         filtered_df = filtered_df.reset_index(drop=True)  # Reset index to sequential
         
         # Filter out columns we don't want to display in the UI
-        columns_to_hide = ['audit_user', 'effective_start_date', 'effective_end_date', 'audit_action']
+        columns_to_hide = ['audit_user', 'effective_start_date', 'effective_end_date', 'audit_action', 'is_current']
         display_filtered_df = filtered_df.drop(columns=[col for col in columns_to_hide if col in filtered_df.columns])
         
         # Clear and repopulate table
@@ -1053,7 +1081,7 @@ class ShowUsersScreen(QWidget):
             sorted_df = sorted_df.reset_index(drop=True)
             
             # Filter out columns we don't want to display in the UI
-            columns_to_hide = ['audit_user', 'effective_start_date', 'effective_end_date', 'audit_action']
+            columns_to_hide = ['audit_user', 'effective_start_date', 'effective_end_date', 'is_current']
             display_sorted_df = sorted_df.drop(columns=[col for col in columns_to_hide if col in sorted_df.columns])
             
             # Clear and repopulate table
@@ -1094,4 +1122,8 @@ class ShowUsersScreen(QWidget):
         # Create audit dialog
         audit_dialog = AuditTrailDialog(parent=self)
         audit_dialog.exec()
-
+    def open_change_password(self):
+        """Open the Change Password screen."""
+        from change_password_ui import ChangePasswordScreen
+        self.change_password_window = ChangePasswordScreen()
+        self.change_password_window.show()

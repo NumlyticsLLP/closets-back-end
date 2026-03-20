@@ -835,10 +835,9 @@ def change_password(email, new_password):
         
         # Get user details before updating
         cursor.execute("""
-    SELECT id, email, 
-           COALESCE(name, designername) as name, 
-           role FROM users
-""")
+            SELECT id, email, name, role FROM users WHERE email = %s
+        """, (email,))
+
         user = cursor.fetchone()
         
         if user:
