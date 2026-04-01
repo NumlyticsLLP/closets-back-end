@@ -151,12 +151,12 @@ static async UpdateWebHookResponse(webHookResponse) {
   }
 
   // Get the user based on the userid from the log
-  const user = await db.user.findOne({ where: { userid: logEntry.userid } });
+  const user = await db.user.findOne({ where: { userid: logEntry.designerId } });
   console.log("Fetched user:", user);
 
   if (!user) {
-    console.error("User not found for userid:", logEntry.userid);
-    throw new Error("User not found for userid: " + logEntry.userid);
+    console.error("User not found for userid:", logEntry.designerId);
+    throw new Error("User not found for userid: " + logEntry.designerId);
   }
 
   console.log("Returning designer name:", user.designername);
