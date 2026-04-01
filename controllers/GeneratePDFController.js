@@ -90,16 +90,18 @@ class GeneratePDFController {
         return res.sendStatus(200);
     }
 
-        static async GetDesignerNameByJobId(req, res) {
-    try {
-        const { jobid } = req.query;
-        const designerName = await PDFService.GetDesignerNameByJobId(jobid);
-        res.json({ designername: designerName });
-    } catch (err) {
-        console.error("Error fetching designer name:", err.message);
-        res.status(500).json({ error: err.message });
-    }
-    }
+static async GetDesignerByJobId(req, res) {
+  try {
+    const { jobid } = req.query;
+
+    const designer = await PDFService.GetDesignerByJobId(jobid);
+
+    res.json({ designer });
+  } catch (err) {
+    console.error("Error fetching designer:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+}
     
 }
 
