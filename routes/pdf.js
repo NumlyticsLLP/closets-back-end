@@ -123,7 +123,7 @@ routes.post('/updatetodocuseal', (req, res) => {
 });
 
 routes.get('/getdesignerbyjobid', (req, res) => {
-  GeneratePDFController.GetDesignerNameByJobId(req, res);
+  GeneratePDFController.GetDesignerByJobId(req, res);
 });
 
 

@@ -138,29 +138,49 @@ static async UpdateWebHookResponse(webHookResponse) {
     //  return user.designername;
     //}
 
-    static async GetDesignerNameByJobId(jobId) {
-  console.log("GetDesignerNameByJobId called with jobId:", jobId);
+static async GetDesignerByJobId(jobId) {
+  console.log("GetDesignerByJobId called with jobId:", jobId);
 
-  // Get the log entry for the given job ID
+  // Get log entry
   const logEntry = await db.log.findOne({ where: { jobid: jobId } });
   console.log("Fetched logEntry:", logEntry);
 
   if (!logEntry) {
-    console.error("Log entry not found for jobId:", jobId);
     throw new Error("Log entry not found for jobId: " + jobId);
   }
 
-  // Get the user based on the userid from the log
-  const user = await db.user.findOne({ where: { userid: logEntry.userid } });
-  console.log("Fetched user:", user);
-
-  if (!user) {
-    console.error("User not found for userid:", logEntry.userid);
-    throw new Error("User not found for userid: " + logEntry.userid);
+  // Parse JSON safely
+  let parsed;
+  try {
+    parsed = JSON.parse(logEntry.jsoncontent);
+  } catch (err) {
+    console.error("Invalid JSON:", logEntry.jsoncontent);
+    throw new Error("Invalid JSON in logEntry");
   }
 
-  console.log("Returning designer name:", user.designername);
-  return user.designername;
+  const designerId = parsed.designerId;
+  console.log("Extracted designerId:", designerId);
+
+  if (!designerId) {
+    throw new Error("designerId not found in jsoncontent");
+  }
+
+  // Fetch designer using designerId
+  const user = await db.user.findOne({ 
+    where: { userid: designerId } 
+  });
+
+  console.log("Fetched designer:", user);
+
+  if (!user) {
+    throw new Error("Designer not found for id: " + designerId);
+  }
+
+  return {
+    id: user.userid,
+    name: user.designername,
+    email: user.email
+  };
 }
 
 

@@ -1,0 +1,435 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sites_cbdcontract_tst_name": {
+            "defaultValue": "cbdcontract-tst",
+            "type": "String"
+        },
+        "serverfarms_ElectronicContract_tst_externalid": {
+            "defaultValue": "/subscriptions/b166118e-fc2a-4af6-b794-125099715bc3/resourceGroups/cbdcontract-tst_group/providers/Microsoft.Web/serverfarms/ElectronicContract-tst",
+            "type": "String"
+        },
+        "virtualNetworks_vnet_tfkspmat_externalid": {
+            "defaultValue": "/subscriptions/b166118e-fc2a-4af6-b794-125099715bc3/resourceGroups/cbdcontract-tst_group/providers/Microsoft.Network/virtualNetworks/vnet-tfkspmat",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2024-11-01",
+            "name": "[parameters('sites_cbdcontract_tst_name')]",
+            "location": "Canada Central",
+            "tags": {
+                "hidden-link: /app-insights-resource-id": "/subscriptions/b166118e-fc2a-4af6-b794-125099715bc3/resourceGroups/cbdcontract-tst_group/providers/microsoft.insights/components/cbdcontract-tst",
+                "hidden-link: /app-insights-instrumentation-key": "0a9f851e-2c78-4553-9062-88d2810b11b3",
+                "hidden-link: /app-insights-conn-string": "InstrumentationKey=0a9f851e-2c78-4553-9062-88d2810b11b3;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=5d9ef3a8-6839-4838-b95b-542bdf2015a2",
+                "Test": "true"
+            },
+            "kind": "app,linux",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_cbdcontract_tst_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('sites_cbdcontract_tst_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[parameters('serverfarms_ElectronicContract_tst_externalid')]",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "dnsConfiguration": {},
+                "outboundVnetRouting": {
+                    "allTraffic": false,
+                    "applicationTraffic": true,
+                    "contentShareTraffic": false,
+                    "imagePullTraffic": false,
+                    "backupRestoreTraffic": false
+                },
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "linuxFxVersion": "NODE|20-lts",
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": false,
+                    "http20Enabled": false,
+                    "functionAppScaleLimit": 0,
+                    "minimumElasticInstanceCount": 0
+                },
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientAffinityProxyEnabled": false,
+                "clientCertEnabled": false,
+                "clientCertMode": "Required",
+                "hostNamesDisabled": false,
+                "ipMode": "IPv4",
+                "customDomainVerificationId": "23B10A7EE6EFE04609476BB22AF587D0DCD8AA4F786E77BCF0467D3A5CBF7AC4",
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": true,
+                "endToEndEncryptionEnabled": false,
+                "redundancyMode": "None",
+                "publicNetworkAccess": "Enabled",
+                "storageAccountRequired": false,
+                "virtualNetworkSubnetId": "[concat(parameters('virtualNetworks_vnet_tfkspmat_externalid'), '/subnets/subnet-squwqrdi')]",
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/ftp')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "tags": {
+                "hidden-link: /app-insights-resource-id": "/subscriptions/b166118e-fc2a-4af6-b794-125099715bc3/resourceGroups/cbdcontract-tst_group/providers/microsoft.insights/components/cbdcontract-tst",
+                "hidden-link: /app-insights-instrumentation-key": "0a9f851e-2c78-4553-9062-88d2810b11b3",
+                "hidden-link: /app-insights-conn-string": "InstrumentationKey=0a9f851e-2c78-4553-9062-88d2810b11b3;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=5d9ef3a8-6839-4838-b95b-542bdf2015a2",
+                "Test": "true"
+            },
+            "properties": {
+                "allow": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/scm')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "tags": {
+                "hidden-link: /app-insights-resource-id": "/subscriptions/b166118e-fc2a-4af6-b794-125099715bc3/resourceGroups/cbdcontract-tst_group/providers/microsoft.insights/components/cbdcontract-tst",
+                "hidden-link: /app-insights-instrumentation-key": "0a9f851e-2c78-4553-9062-88d2810b11b3",
+                "hidden-link: /app-insights-conn-string": "InstrumentationKey=0a9f851e-2c78-4553-9062-88d2810b11b3;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=5d9ef3a8-6839-4838-b95b-542bdf2015a2",
+                "Test": "true"
+            },
+            "properties": {
+                "allow": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/web')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "tags": {
+                "hidden-link: /app-insights-resource-id": "/subscriptions/b166118e-fc2a-4af6-b794-125099715bc3/resourceGroups/cbdcontract-tst_group/providers/microsoft.insights/components/cbdcontract-tst",
+                "hidden-link: /app-insights-instrumentation-key": "0a9f851e-2c78-4553-9062-88d2810b11b3",
+                "hidden-link: /app-insights-conn-string": "InstrumentationKey=0a9f851e-2c78-4553-9062-88d2810b11b3;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=5d9ef3a8-6839-4838-b95b-542bdf2015a2",
+                "Test": "true"
+            },
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "linuxFxVersion": "NODE|20-lts",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": true,
+                "acrUseManagedIdentityCreds": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "REDACTED",
+                "scmType": "GitHubAction",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetName": "edb6d14e-56bc-42b9-9c18-aea074412173_subnet-squwqrdi",
+                "vnetRouteAllEnabled": true,
+                "vnetPrivatePortsCount": 0,
+                "publicNetworkAccess": "Enabled",
+                "cors": {
+                    "allowedOrigins": [
+                        "*",
+                        "https://test.wemakegreatclosets.ca"
+                    ],
+                    "supportCredentials": false
+                },
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "scmMinTlsVersion": "1.2",
+                "ftpsState": "FtpsOnly",
+                "preWarmedInstanceCount": 0,
+                "elasticWebAppScaleLimit": 0,
+                "functionsRuntimeScaleMonitoringEnabled": false,
+                "minimumElasticInstanceCount": 0,
+                "azureStorageAccounts": {},
+                "http20ProxyFlag": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/3d660002-1307-42d3-a62f-3908b01cb5d6')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-11-21T13:41:44.8090227Z",
+                "end_time": "2025-11-21T13:44:05.9875233Z",
+                "active": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/481f2fe4-4c45-4e0b-841b-83b8e1b3d150')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-08-21T12:42:13.223275Z",
+                "end_time": "2025-08-21T12:42:49.8384091Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/507ec4d3-4221-485a-bec5-eaffdc34425c')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-11-21T13:39:31.3252167Z",
+                "end_time": "2025-11-21T13:40:16.6750899Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/68326350-7fa7-4960-af86-975e7e2ec4dc')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-08-21T11:53:11.7114124Z",
+                "end_time": "2025-08-21T11:53:33.8706735Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/9182c565-01aa-483e-9733-165fb9e8ca5d')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-08-22T05:04:01.5502003Z",
+                "end_time": "2025-08-22T05:04:27.8873579Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/b2977b4d-2d2f-4ca2-a300-6e7293c9cb5b')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-08-21T12:39:23.2707379Z",
+                "end_time": "2025-08-21T12:39:49.5771441Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/c41f75f3-70fb-4b74-8fb9-b3185b991ad1')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-09-24T13:30:20.6685761Z",
+                "end_time": "2025-09-24T13:31:08.6141369Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/ce02474a-4ffd-45a2-9514-1ee14dc6e0a4')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-09-24T13:42:30.7822588Z",
+                "end_time": "2025-09-24T13:43:02.2735467Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/ef8f046d-47b5-4ce1-ba6f-99f5a93ada85')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-09-24T13:27:43.7654788Z",
+                "end_time": "2025-09-24T13:28:15.9018342Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/f46dd69e-1047-4587-80e2-317081030be2')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "OneDeploy",
+                "message": "OneDeploy",
+                "start_time": "2025-09-16T06:33:27.1866217Z",
+                "end_time": "2025-09-16T06:33:59.6308852Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/', parameters('sites_cbdcontract_tst_name'), '.azurewebsites.net')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "siteName": "cbdcontract-tst",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/virtualNetworkConnections",
+            "apiVersion": "2024-11-01",
+            "name": "[concat(parameters('sites_cbdcontract_tst_name'), '/edb6d14e-56bc-42b9-9c18-aea074412173_subnet-squwqrdi')]",
+            "location": "Canada Central",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cbdcontract_tst_name'))]"
+            ],
+            "properties": {
+                "vnetResourceId": "[concat(parameters('virtualNetworks_vnet_tfkspmat_externalid'), '/subnets/subnet-squwqrdi')]",
+                "isSwift": true
+            }
+        }
+    ]
+}
